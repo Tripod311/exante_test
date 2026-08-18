@@ -1,0 +1,25 @@
+{
+  "name": "roleplay_ai_back",
+  "version": "0.0.0",
+  "description": "roleplay ai back for exante test task",
+  "keywords": [
+    "ts",
+    "ai"
+  ],
+  "license": "ISC",
+  "author": "Tripod ind.tripod@gmail.com",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "typescript": "^7.0.2",
+    "@types/ws": "^8.18.1"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "ws": "^8.21.3"
+  }
+}

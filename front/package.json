@@ -1,0 +1,27 @@
+{
+  "name": "roleplay_ai_front",
+  "version": "0.0.0",
+  "description": "roleplay ai front for exante test task",
+  "keywords": [
+    "ts",
+    "ai"
+  ],
+  "license": "ISC",
+  "author": "Tripod ind.tripod@gmail.com",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-react": "^6.0.5",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.1"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  }
+}
