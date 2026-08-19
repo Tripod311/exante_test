@@ -1,0 +1,13 @@
+{
+	"client_dir": "../client",
+	"port": 8080,
+	"agents_dir": "../agents",
+	"providers": {
+		"deepSeek": {
+			"baseURL": "",
+			"apiKey": "",
+			"headers": {},
+			"params": {}
+		}
+	}
+}

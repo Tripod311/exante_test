@@ -9,14 +9,16 @@
   "license": "ISC",
   "author": "Tripod ind.tripod@gmail.com",
   "type": "module",
-  "main": "index.js",
+  "main": "dist/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "run": "node dist/main.js"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
-    "typescript": "^7.0.2",
-    "@types/ws": "^8.18.1"
+    "@types/node": "^26.2.0",
+    "@types/ws": "^8.18.1",
+    "typescript": "^7.0.2"
   },
   "dependencies": {
     "express": "^5.2.1",

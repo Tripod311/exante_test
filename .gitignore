@@ -1,3 +1,4 @@
 back/node_modules
+back/configuration.json
 front/node_modules
 dist
