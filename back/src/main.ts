@@ -1,6 +1,7 @@
 import path from "path"
 import fs from "fs"
 import express from "express"
+import cors from "cors"
 import type { Request, Response } from "express"
 import loadAgent from "./agents/loader.js"
 import type Agent from "./agents/agent.js"
@@ -26,8 +27,10 @@ class API {
 	}
 
 	attachHandlers () {
+		this.instance.use(cors());
 		this.instance.use(express.json());
 
+		this.instance.get("/api/agents", this.listAgents.bind(this));
 		this.instance.post("/api/agent/:id/spawn", this.spawnAgent.bind(this));
 		this.instance.post("/api/chat/:id/start", this.startDialog.bind(this));
 		this.instance.post("/api/chat/:id/end", this.endDialog.bind(this));
@@ -38,7 +41,9 @@ class API {
 		this.instance.use(express.static(this.config.client_dir));
 
 		this.instance.use((req, res) => {
-			res.sendFile(path.join(this.config.client_dir, "index.html"));
+			const client_dir = path.resolve(this.config.client_dir);
+
+			res.sendFile(path.join(client_dir, "index.html"));
 		});
 	}
 
@@ -80,6 +85,28 @@ class API {
 	}
 
 	// API
+
+	async listAgents (req: Request, res: Response) {
+		try {
+			const abs = path.resolve(this.config.agents_dir);
+
+			const entries = await fs.promises.readdir(abs, { withFileTypes: true });
+
+			const folders = entries
+				.filter(entry => entry.isDirectory())
+				.map(entry => entry.name);
+
+			res.json({
+				error: false,
+				data: folders
+			});
+		} catch (err: any) {
+			res.json({
+				error: true,
+				details: err.toString()
+			});
+		}
+	}
 
 	async spawnAgent (req: Request, res: Response) {
 		const id = this.counter++;
