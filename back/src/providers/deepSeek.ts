@@ -1,5 +1,14 @@
 import Provider from "./provider.js"
 
+interface DeepSeekToolDescription {
+	type: "function";
+	function: {
+		name: string;
+		description: string;
+		parameters: Record<string, unknown>;
+	}
+}
+
 interface DeepSeekResponse {
 	id: string;
 	object: string;
@@ -45,7 +54,7 @@ export default class DeepSeekProvider extends Provider {
 	async request(req: ProviderRequest): Promise<string> {
 		let iterations = 0;
 		const messages = req.messages.slice();
-		let tools_to_send = [];
+		let tools_to_send: DeepSeekToolDescription[] = [];
 		if (req.tools) {
 			tools_to_send = req.tools.map(t => {
 				return {
@@ -79,24 +88,24 @@ export default class DeepSeekProvider extends Provider {
 				throw new Error(`DeepSeek returned no content`);
 			}
 
-			const msg = response.choices[0].message;
+			const msg = response.choices[0]!.message;
 
 			messages.push(msg);
 
 			if (msg.tool_calls && msg.tool_calls.length > 0) {
 				for (const call of msg.tool_calls) {
 					try {
-						const result = await this.callTool(req.tools, call.function.name, JSON.parse(call.function.arguments));
+						const result = await this.callTool(req.tools as ProviderToolDescription[], call.function.name, JSON.parse(call.function.arguments));
 						messages.push({
 							role: "tool",
-							tool_call_id: toolCall.id,
+							tool_call_id: call.id,
 							content: JSON.stringify(result)
 						});
 					} catch (err: any) {
 						console.warn(`Tool call error: ${err}`);
 						messages.push({
 							role: "tool",
-							tool_call_id: toolCall.id,
+							tool_call_id: call.id,
 							content: `Tool call error: ${err}`
 						});
 					}
@@ -104,15 +113,20 @@ export default class DeepSeekProvider extends Provider {
 			} else {
 				// actually finished
 				const content = msg.content;
-				return content
+
+				if (!content) {
+					throw new Error(`DeepSeek returned no content`);
+				} else {
+					return content as string;
+				}
 			}
 		}
 	}
 
-	private async callTool (tools: ProviderToolDescription[], name: string, arguments: Record<string, unknown>): Promise<unknown> {
+	private async callTool (tools: ProviderToolDescription[], name: string, args: Record<string, unknown>): Promise<unknown> {
 		for (const desc of tools) {
 			if (desc.name === name) {
-				return await desc.call(arguments);
+				return await desc.call(args);
 			}
 		}
 
@@ -122,21 +136,21 @@ export default class DeepSeekProvider extends Provider {
 	private async send (
 		model: string,
 		messages: Message[],
-		tools?: Partial<ProviderToolDescription>[],
+		tools?: DeepSeekToolDescription[],
 		temperature?: number,
 		topP?: number,
 		maxTokens?: number
 	): Promise<DeepSeekResponse> {
-		const headers = {
+		const headers: Record<string, string> = {
 			"Content-Type": "application/json",
 			"Authorization": `Bearer ${this.configuration.apiKey}`
 		};
 		if (this.configuration.headers) {
 			for (const name in this.configuration.headers) {
-				headers[name] = this.configuration.headers[name];
+				headers[name] = this.configuration.headers[name] as string;
 			}
 		}
-		const params = {
+		const params: Record<string, unknown> = {
 			model,
 			messages,
 			tools,

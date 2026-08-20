@@ -1,5 +1,5 @@
 export default abstract class Provider {
-	private configuration: ProviderConfiguration;
+	protected configuration: ProviderConfiguration;
 
 	constructor (conf: ProviderConfiguration) {
 		this.configuration = conf;

@@ -7,9 +7,9 @@ export default class Agent {
 	public analyzer: Analyzer;
 	public customer: Customer;
 
-	constructor (conf: AgentConfiguration, analysis: string, role: string, provider: Provider) {
+	constructor (conf: AgentConfiguration, analyzer: string, role: string, provider: Provider) {
 		this.conf = conf;
-		this.analyzer = new Analyzer(analysis, provider);
+		this.analyzer = new Analyzer(analyzer, provider);
 		this.customer = new Customer(
 			role,
 			provider,

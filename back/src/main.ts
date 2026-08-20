@@ -2,8 +2,9 @@ import path from "path"
 import fs from "fs"
 import express from "express"
 import type { Request, Response } from "express"
-import AgentLoader from "./agentLoader.js"
-import createProvider from "./providers/factory,js"
+import loadAgent from "./agents/loader.js"
+import type Agent from "./agents/agent.js"
+import createProvider from "./providers/factory.js"
 import type Provider from "./providers/provider.js"
 
 class API {
@@ -43,7 +44,7 @@ class API {
 
 	createProviders () {
 		for (const name in this.config.providers) {
-			this.providers[name] = createProvider(name, this.config.providers[name]);
+			this.providers[name] = createProvider(name, this.config.providers[name] as ProviderConfiguration);
 		}
 	}
 
@@ -84,7 +85,7 @@ class API {
 		const id = this.counter++;
 
 		try {
-			const agent = await loadAgent(this.providers, this.config.agents_dir, req.params.id);
+			const agent = await loadAgent(this.providers, this.config.agents_dir, req.params.id as string);
 
 			this.agents[id] = agent;
 
@@ -101,15 +102,56 @@ class API {
 	}
 
 	startDialog (req: Request, res: Response) {
+		const id = parseInt(req.params.id as string);
 
+		if (this.agents[id] === undefined) {
+			res.json({
+				error: true,
+				details: `Dialog ${id} not found`
+			});
+			return;
+		}
+
+		this.agents[id].customer.startDialog();
+
+		res.json({
+			error: false
+		});
 	}
 
 	endDialog (req: Request, res: Response) {
+		const id = parseInt(req.params.id as string);
 
+		if (this.agents[id] === undefined) {
+			res.json({
+				error: true,
+				details: `Dialog ${id} not found`
+			});
+			return;
+		}
+
+		this.agents[id].customer.stopDialog();
+
+		res.json({
+			error: false
+		});
 	}
 
 	loadState (req: Request, res: Response) {
+		const id = parseInt(req.params.id as string);
 
+		if (this.agents[id] === undefined) {
+			res.json({
+				error: true,
+				details: `Dialog ${id} not found`
+			});
+			return;
+		}
+
+		res.json({
+			error: false,
+			data: this.agents[id].customer.state
+		});
 	}
 
 	async processMessage (req: Request, res: Response) {

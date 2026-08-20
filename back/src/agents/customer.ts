@@ -7,7 +7,7 @@ export default class Customer {
 	public started: boolean = false;
 	public finished: boolean = false;
 
-	private temperature?: number
+	private temperature?: number;
 	private topP?: number;
 
 	private timeout: number;
@@ -38,7 +38,7 @@ export default class Customer {
 		this.finished = true;
 	}
 
-	async processMessage (message: string): APIResponse {
+	async processMessage (message: string): Promise<APIResponse> {
 		const history = this.history.map(m => JSON.stringify(m)).join('\n');
 
 		try {
@@ -77,6 +77,14 @@ export default class Customer {
 				error: true,
 				details: err.toString()
 			}
+		}
+	}
+
+	get state () {
+		return {
+			started: this.started,
+			finished: this.finished,
+			history: this.history
 		}
 	}
 }

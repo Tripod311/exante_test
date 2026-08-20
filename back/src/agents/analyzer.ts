@@ -5,6 +5,7 @@ export default class Analyzer {
 	private prompt: string;
 
 	constructor (prompt: string, provider: Provider) {
-		
+		this.prompt = prompt;
+		this.provider = provider;	
 	}
 }
