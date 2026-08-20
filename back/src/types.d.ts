@@ -9,6 +9,7 @@ declare global {
 	interface ProviderConfiguration {
 		baseURL: string;
 		apiKey: string;
+		model: string;
 		maxIterations?: number;
 		maxTokens?: number;
 		headers?: Record<string, string>;
@@ -17,6 +18,7 @@ declare global {
 
 	interface AgentConfiguration {
 		provider: string;
+		timeout: number;
 		temperature?: number;
 		topP?: number;
 	}
@@ -37,13 +39,15 @@ declare global {
 	export interface ProviderRequest {
 		systemPrompt: string;
 		messages: Message[];
-
 		tools?: ProviderToolDescription[];
-
-		model: string;
 		temperature?: number;
 		topP?: number;
-		maxTokens?: number;
+	}
+
+	export interface APIResponse {
+		error: boolean;
+		details?: string;
+		data?: unknown;
 	}
 }
 

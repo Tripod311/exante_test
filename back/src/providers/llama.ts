@@ -1,6 +1,6 @@
 import Provider from "./provider.js"
 
-interface DeepSeekResponse {
+interface LlamaResponse {
 	id: string;
 	object: string;
 	created: number;
@@ -41,7 +41,7 @@ interface DeepSeekResponse {
 	};
 }
 
-export default class DeepSeekProvider extends Provider {
+export default class LlamaProvider extends Provider {
 	async request(req: ProviderRequest): Promise<string> {
 		let iterations = 0;
 		const messages = req.messages.slice();
@@ -76,7 +76,7 @@ export default class DeepSeekProvider extends Provider {
 			}
 
 			if (response.choices.length === 0) {
-				throw new Error(`DeepSeek returned no content`);
+				throw new Error(`Llama returned no content`);
 			}
 
 			const msg = response.choices[0].message;
@@ -128,8 +128,7 @@ export default class DeepSeekProvider extends Provider {
 		maxTokens?: number
 	): Promise<DeepSeekResponse> {
 		const headers = {
-			"Content-Type": "application/json",
-			"Authorization": `Bearer ${this.configuration.apiKey}`
+			"Content-Type": "application/json"
 		};
 		if (this.configuration.headers) {
 			for (const name in this.configuration.headers) {
@@ -137,7 +136,6 @@ export default class DeepSeekProvider extends Provider {
 			}
 		}
 		const params = {
-			model,
 			messages,
 			tools,
 			temperature,

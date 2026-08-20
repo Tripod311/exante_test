@@ -2,14 +2,17 @@ import path from "path"
 import fs from "fs"
 import express from "express"
 import type { Request, Response } from "express"
-import ProviderFactory from "./providers/factory.js"
 import AgentLoader from "./agentLoader.js"
+import createProvider from "./providers/factory,js"
+import type Provider from "./providers/provider.js"
 
 class API {
 	private config: ApplicationConfiguration;
 	private instance: ReturnType<typeof express>;
 	private providers: Record<string, Provider> = {};
-	private agents: Record<string, Agent> = {};
+
+	private counter: number = 0;
+	private agents: Record<number, Agent> = {};
 
 	private server?: ReturnType<typeof this.instance.listen>;
 
@@ -18,14 +21,18 @@ class API {
 		this.instance = express();
 
 		this.attachHandlers();
-		this.createProviders(config.providers);
+		this.createProviders();
 	}
 
 	attachHandlers () {
 		this.instance.use(express.json());
 
-		this.instance.get("/api/agent/:agentName", this.instantiateAgent.bind(this));
-		this.instance.post("/api/agent/:instanceId/message", this.processMessage.bind(this));
+		this.instance.post("/api/agent/:id/spawn", this.spawnAgent.bind(this));
+		this.instance.post("/api/chat/:id/start", this.startDialog.bind(this));
+		this.instance.post("/api/chat/:id/end", this.endDialog.bind(this));
+		this.instance.get("/api/chat/:id/history", this.loadState.bind(this));
+		this.instance.post("/api/chat/:id/message", this.processMessage.bind(this));
+		this.instance.get("/api/chat/:id/report", this.generateReport.bind(this));
 
 		this.instance.use(express.static(this.config.client_dir));
 
@@ -34,13 +41,9 @@ class API {
 		});
 	}
 
-	createProviders (providers: ApplicationConfiguration.providers) {
-		for (const providerName in providers) {
-			try {
-				this.providers[providerName] = ProviderFactory.create(providerName, providers[providerName]);
-			} catch (err: any) {
-				console.error(err);
-			}
+	createProviders () {
+		for (const name in this.config.providers) {
+			this.providers[name] = createProvider(name, this.config.providers[name]);
 		}
 	}
 
@@ -77,11 +80,43 @@ class API {
 
 	// API
 
-	instantiateAgent (req: Request, res: Response) {
+	async spawnAgent (req: Request, res: Response) {
+		const id = this.counter++;
+
+		try {
+			const agent = await loadAgent(this.providers, this.config.agents_dir, req.params.id);
+
+			this.agents[id] = agent;
+
+			res.json({
+				error: false,
+				data: id
+			});
+		} catch (err: any) {
+			res.json({
+				error: true,
+				details: err
+			});
+		}
+	}
+
+	startDialog (req: Request, res: Response) {
 
 	}
 
-	processMessage (req: Request, res: Response) {
+	endDialog (req: Request, res: Response) {
+
+	}
+
+	loadState (req: Request, res: Response) {
+
+	}
+
+	async processMessage (req: Request, res: Response) {
+
+	}
+
+	async generateReport (req: Request, res: Response) {
 
 	}
 }

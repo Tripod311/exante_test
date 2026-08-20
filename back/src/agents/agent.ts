@@ -1,25 +1,21 @@
 import type Provider from "../providers/provider.js"
+import Analyzer from "./analyzer.js"
+import Customer from "./customer.js"
 
 export default class Agent {
 	private conf: AgentConfiguration;
-	private analysis: string;
-	private role: string;
-	private provider: Provider;
-
-	private history: string[];
+	public analyzer: Analyzer;
+	public customer: Customer;
 
 	constructor (conf: AgentConfiguration, analysis: string, role: string, provider: Provider) {
 		this.conf = conf;
-		this.analysis = analysis;
-		this.role = role;
-		this.provider = Provider;
-	}
-
-	async sendMessage (message: string): Promise<string> {
-
-	}
-
-	async generateReport (): Promise<string> {
-		
+		this.analyzer = new Analyzer(analysis, provider);
+		this.customer = new Customer(
+			role,
+			provider,
+			conf.timeout,
+			conf.temperature,
+			conf.topP
+		);
 	}
 }
