@@ -1,15 +1,14 @@
+import crypto from "crypto";
 import path from "path";
 import fs from "fs";
 import express from "express";
 import cors from "cors";
-import loadAgent from "./agents/loader.js";
+import AgentManager from "./agents/manager.js";
 import createProvider from "./providers/factory.js";
 class API {
     config;
     instance;
     providers = {};
-    counter = 0;
-    agents = {};
     server;
     constructor(config) {
         this.config = config;
@@ -19,14 +18,14 @@ class API {
     }
     attachHandlers() {
         this.instance.use(cors());
-        this.instance.use(express.json());
+        this.instance.use(express.json({ limit: "1mb" }));
         this.instance.get("/api/agents", this.listAgents.bind(this));
-        this.instance.post("/api/agent/:id/spawn", this.spawnAgent.bind(this));
+        this.instance.post("/api/agent/:type/spawn", this.spawnAgent.bind(this));
         this.instance.post("/api/chat/:id/start", this.startDialog.bind(this));
-        this.instance.post("/api/chat/:id/end", this.endDialog.bind(this));
-        this.instance.get("/api/chat/:id/history", this.loadState.bind(this));
+        this.instance.post("/api/chat/:id/finish", this.finishDialog.bind(this));
+        this.instance.get("/api/chat/:id/state", this.loadState.bind(this));
         this.instance.post("/api/chat/:id/message", this.processMessage.bind(this));
-        this.instance.get("/api/chat/:id/report", this.generateReport.bind(this));
+        this.instance.get("/api/chat/:id/report", this.getReport.bind(this));
         this.instance.use(express.static(this.config.client_dir));
         this.instance.use((req, res) => {
             const client_dir = path.resolve(this.config.client_dir);
@@ -65,14 +64,9 @@ class API {
     // API
     async listAgents(req, res) {
         try {
-            const abs = path.resolve(this.config.agents_dir);
-            const entries = await fs.promises.readdir(abs, { withFileTypes: true });
-            const folders = entries
-                .filter(entry => entry.isDirectory())
-                .map(entry => entry.name);
             res.json({
                 error: false,
-                data: folders
+                data: await AgentManager.listAgents()
             });
         }
         catch (err) {
@@ -83,10 +77,8 @@ class API {
         }
     }
     async spawnAgent(req, res) {
-        const id = this.counter++;
         try {
-            const agent = await loadAgent(this.providers, this.config.agents_dir, req.params.id);
-            this.agents[id] = agent;
+            const id = await AgentManager.spawnAgent(this.providers, req.params.type);
             res.json({
                 error: false,
                 data: id
@@ -100,50 +92,59 @@ class API {
         }
     }
     startDialog(req, res) {
-        const id = parseInt(req.params.id);
-        if (this.agents[id] === undefined) {
+        try {
+            AgentManager.startDialog(req.params.id);
+            res.json({ error: false });
+        }
+        catch (err) {
             res.json({
                 error: true,
-                details: `Dialog ${id} not found`
+                details: err.toString()
             });
-            return;
         }
-        this.agents[id].customer.startDialog();
-        res.json({
-            error: false
-        });
     }
-    endDialog(req, res) {
-        const id = parseInt(req.params.id);
-        if (this.agents[id] === undefined) {
+    finishDialog(req, res) {
+        try {
+            AgentManager.finishDialog(req.params.id);
+            res.json({ error: false });
+        }
+        catch (err) {
             res.json({
                 error: true,
-                details: `Dialog ${id} not found`
+                details: err.toString()
             });
-            return;
         }
-        this.agents[id].customer.stopDialog();
-        res.json({
-            error: false
-        });
     }
     loadState(req, res) {
-        const id = parseInt(req.params.id);
-        if (this.agents[id] === undefined) {
+        try {
+            res.json({
+                error: false,
+                data: AgentManager.loadState(req.params.id)
+            });
+        }
+        catch (err) {
             res.json({
                 error: true,
-                details: `Dialog ${id} not found`
+                details: err.toString()
             });
-            return;
         }
-        res.json({
-            error: false,
-            data: this.agents[id].customer.state
-        });
     }
     async processMessage(req, res) {
+        try {
+            res.json({
+                error: false,
+                data: await AgentManager.processMessage(req.params.id, req.body.message)
+            });
+        }
+        catch (err) {
+            console.log(`Chat ${req.params.id}, message processing error: ${err}`);
+            res.json({
+                error: true,
+                details: err.toString()
+            });
+        }
     }
-    async generateReport(req, res) {
+    async getReport(req, res) {
     }
 }
 let config;
@@ -172,5 +173,10 @@ async function shutdown() {
 }
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
-api.start();
+AgentManager.setup(config.reports_dir, config.agents_dir).then(() => {
+    api.start();
+}, (err) => {
+    console.error(`Agent manager couldn't start: ${err}`);
+    process.exit(1);
+});
 //# sourceMappingURL=main.js.map

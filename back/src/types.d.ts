@@ -4,6 +4,7 @@ declare global {
 		port: number;
 		providers: Record<string, ProviderConfiguration>;
 		agents_dir: string;
+		reports_dir: string;
 	}
 
 	interface ProviderConfiguration {

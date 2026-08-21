@@ -11,8 +11,8 @@ export default class Customer {
     private timeoutID?;
     constructor(prompt: string, provider: Provider, timeout: number, temperature?: number, topP?: number);
     startDialog(): void;
-    stopDialog(): void;
-    processMessage(message: string): Promise<APIResponse>;
+    finishDialog(): void;
+    processMessage(message: string): Promise<string>;
     get state(): {
         started: boolean;
         finished: boolean;

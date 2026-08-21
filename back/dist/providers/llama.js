@@ -3,6 +3,10 @@ export default class LlamaProvider extends Provider {
     async request(req) {
         let iterations = 0;
         const messages = req.messages.slice();
+        messages.unshift({
+            role: "system",
+            content: req.systemPrompt
+        });
         let tools_to_send = [];
         if (req.tools) {
             tools_to_send = req.tools.map(t => {
@@ -94,7 +98,7 @@ export default class LlamaProvider extends Provider {
             body: JSON.stringify(params)
         });
         if (!response.ok) {
-            throw new Error(`DeepSeek API error ${response.status}: ${await response.text()}`);
+            throw new Error(`Llama API error ${response.status}: ${await response.text()}`);
         }
         return await response.json();
     }

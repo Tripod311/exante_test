@@ -1,10 +1,10 @@
+import crypto from "crypto"
 import path from "path"
 import fs from "fs"
 import express from "express"
 import cors from "cors"
 import type { Request, Response } from "express"
-import loadAgent from "./agents/loader.js"
-import type Agent from "./agents/agent.js"
+import AgentManager from "./agents/manager.js"
 import createProvider from "./providers/factory.js"
 import type Provider from "./providers/provider.js"
 
@@ -12,9 +12,6 @@ class API {
 	private config: ApplicationConfiguration;
 	private instance: ReturnType<typeof express>;
 	private providers: Record<string, Provider> = {};
-
-	private counter: number = 0;
-	private agents: Record<number, Agent> = {};
 
 	private server?: ReturnType<typeof this.instance.listen>;
 
@@ -28,15 +25,15 @@ class API {
 
 	attachHandlers () {
 		this.instance.use(cors());
-		this.instance.use(express.json());
+		this.instance.use(express.json({ limit: "1mb" }));
 
 		this.instance.get("/api/agents", this.listAgents.bind(this));
-		this.instance.post("/api/agent/:id/spawn", this.spawnAgent.bind(this));
+		this.instance.post("/api/agent/:type/spawn", this.spawnAgent.bind(this));
 		this.instance.post("/api/chat/:id/start", this.startDialog.bind(this));
-		this.instance.post("/api/chat/:id/end", this.endDialog.bind(this));
-		this.instance.get("/api/chat/:id/history", this.loadState.bind(this));
+		this.instance.post("/api/chat/:id/finish", this.finishDialog.bind(this));
+		this.instance.get("/api/chat/:id/state", this.loadState.bind(this));
 		this.instance.post("/api/chat/:id/message", this.processMessage.bind(this));
-		this.instance.get("/api/chat/:id/report", this.generateReport.bind(this));
+		this.instance.get("/api/chat/:id/report", this.getReport.bind(this));
 
 		this.instance.use(express.static(this.config.client_dir));
 
@@ -88,17 +85,9 @@ class API {
 
 	async listAgents (req: Request, res: Response) {
 		try {
-			const abs = path.resolve(this.config.agents_dir);
-
-			const entries = await fs.promises.readdir(abs, { withFileTypes: true });
-
-			const folders = entries
-				.filter(entry => entry.isDirectory())
-				.map(entry => entry.name);
-
 			res.json({
 				error: false,
-				data: folders
+				data: await AgentManager.listAgents()
 			});
 		} catch (err: any) {
 			res.json({
@@ -109,12 +98,8 @@ class API {
 	}
 
 	async spawnAgent (req: Request, res: Response) {
-		const id = this.counter++;
-
 		try {
-			const agent = await loadAgent(this.providers, this.config.agents_dir, req.params.id as string);
-
-			this.agents[id] = agent;
+			const id = await AgentManager.spawnAgent(this.providers, req.params.type as string);
 
 			res.json({
 				error: false,
@@ -129,63 +114,62 @@ class API {
 	}
 
 	startDialog (req: Request, res: Response) {
-		const id = parseInt(req.params.id as string);
+		try {
+			AgentManager.startDialog(req.params.id as string);
 
-		if (this.agents[id] === undefined) {
+			res.json({ error: false });
+		} catch (err: any) {
 			res.json({
 				error: true,
-				details: `Dialog ${id} not found`
+				details: err.toString()
 			});
-			return;
 		}
-
-		this.agents[id].customer.startDialog();
-
-		res.json({
-			error: false
-		});
 	}
 
-	endDialog (req: Request, res: Response) {
-		const id = parseInt(req.params.id as string);
+	finishDialog (req: Request, res: Response) {
+		try {
+			AgentManager.finishDialog(req.params.id as string);
 
-		if (this.agents[id] === undefined) {
+			res.json({ error: false });
+		} catch (err: any) {
 			res.json({
 				error: true,
-				details: `Dialog ${id} not found`
+				details: err.toString()
 			});
-			return;
 		}
-
-		this.agents[id].customer.stopDialog();
-
-		res.json({
-			error: false
-		});
 	}
 
 	loadState (req: Request, res: Response) {
-		const id = parseInt(req.params.id as string);
-
-		if (this.agents[id] === undefined) {
+		try {
+			res.json({
+				error: false,
+				data: AgentManager.loadState(req.params.id as string)
+			});
+		} catch (err: any) {
 			res.json({
 				error: true,
-				details: `Dialog ${id} not found`
+				details: err.toString()
 			});
-			return;
 		}
-
-		res.json({
-			error: false,
-			data: this.agents[id].customer.state
-		});
 	}
 
 	async processMessage (req: Request, res: Response) {
+		try {
+			res.json({
+				error: false,
+				data: await AgentManager.processMessage(req.params.id as string, req.body.message as string)
+			});
+		} catch (err: any) {
+			console.log(`Chat ${req.params.id}, message processing error: ${err}`);
 
+			res.json({
+				error: true,
+				details: err.toString()
+			});
+		}
 	}
 
-	async generateReport (req: Request, res: Response) {
+	async getReport (req: Request, res: Response) {
 
 	}
 }
@@ -220,4 +204,9 @@ async function shutdown() {
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 
-api.start();
+AgentManager.setup(config.reports_dir, config.agents_dir).then(() => {
+	api.start();
+}, (err: any) => {
+	console.error(`Agent manager couldn't start: ${err}`);
+	process.exit(1);
+});

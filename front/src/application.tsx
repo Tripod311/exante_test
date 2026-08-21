@@ -1,26 +1,31 @@
 import { useState, useEffect } from "react"
 import type { ReactNode } from "react"
+import { Route, Routes, useNavigate } from "react-router-dom"
 
 import spawnChat from "./api/spawnChat.js"
 import getAgents from "./api/getAgents.js"
 import type APIResponse from "./api/config.js"
 
 import Spinner from "./components/spinner.jsx"
+import Overlay from "./overlay/overlay.jsx"
 import AgentSelector from "./components/agentSelector.jsx"
+import Chat from "./components/chat.jsx"
+import Report from "./components/report.jsx"
 
 export default function Application () {
-	const [ loading, setLoading ] = useState<boolean>(true);
 	const [ error, setError ] = useState<string | null>(null);
 	const [ selectedAgent, setSelectedAgent ] = useState<string | null>(null);
 	const [ agents, setAgents ] = useState<string[]>([]);
 
 	useEffect(() => {
+		window.showSpinner();
+
 		getAgents().then(
 			(response: APIResponse) => {
-				setLoading(false);
+				window.closeModals();
 
 				if (response.error) {
-					setError(response.details);
+					window.showNotification(response.details);
 				} else {
 					setAgents(response.data);
 				}
@@ -28,30 +33,30 @@ export default function Application () {
 		);
 	}, []);
 
+	const navigate = useNavigate();
+
 	const onAgentSelected = async (type: string) => {
-		setLoading(true);
+		window.showSpinner();
 
 		const response = await spawnChat(type);
-	}
 
-	let content: ReactNode;
+		window.closeModals();
 
-	if (loading) {
-		content = <Spinner />;
-	} else {
-		if (error !== null) {
-			content = <h1>An error occurred:<br/>{error}</h1>
+		if (response.error) {
+			window.showNotification("Error", response.details, window.closeModals);
 		} else {
-			content = <AgentSelector
-				onSelect={onAgentSelected}
-				agents={agents}
-			/>
+			navigate(`/${response.data}/chat`);
 		}
 	}
 
 	return (
 		<main className="w-full h-full overflow-hidden">
-			{ content }
+			<Routes>
+				<Route path="/" element={ <AgentSelector agents={ agents } onSelect={ onAgentSelected } /> } />
+				<Route path="/:chatId/chat" element={ <Chat /> } />
+				<Route path="/:chatId/report" element={ <Report /> } />
+			</Routes>
+			<Overlay />
 		</main>
 	)
 }

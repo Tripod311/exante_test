@@ -28,56 +28,48 @@ export default class Customer {
 	}
 
 	startDialog () {
-		this.started = true;
-		this.timeoutID = setTimeout(this.stopDialog.bind(this), this.timeout);
+		if (!this.started) {
+			this.started = true;
+			this.timeoutID = setTimeout(this.finishDialog.bind(this), this.timeout * 60 * 1000);
+		}
 	}
 
-	stopDialog () {
-		clearTimeout(this.timeoutID);
-		this.started = false;
-		this.finished = true;
+	finishDialog () {
+		if (this.started && !this.finished) {
+			clearTimeout(this.timeoutID);
+			this.started = false;
+			this.finished = true;
+		}
 	}
 
-	async processMessage (message: string): Promise<APIResponse> {
+	async processMessage (message: string): Promise<string> {
 		const history = this.history.map(m => JSON.stringify(m)).join('\n');
 
-		try {
-			const response = await this.provider.request({
-				systemPrompt: this.prompt,
-				messages: [
-					{
-						role: "system",
-						content: `Conversation history:\n${history}`
-					},
-					{
-						role: "user",
-						content: message
-					}
-				],
-				temperature: this.temperature,
-				topP: this.topP
-			});
-			this.history.push({
-				role: "user",
-				content: message
-			});
-			this.history.push({
-				role: "assistant",
-				content: response
-			});
+		const response = await this.provider.request({
+			systemPrompt: this.prompt,
+			messages: [
+				{
+					role: "system",
+					content: `Conversation history:\n${history}`
+				},
+				{
+					role: "user",
+					content: message
+				}
+			],
+			temperature: this.temperature,
+			topP: this.topP
+		});
+		this.history.push({
+			role: "user",
+			content: message
+		});
+		this.history.push({
+			role: "assistant",
+			content: response
+		});
 
-			return {
-				error: false,
-				data: response
-			}
-		} catch (err: any) {
-			console.warn(`Chat error: ${err}`);
-
-			return {
-				error: true,
-				details: err.toString()
-			}
-		}
+		return response;
 	}
 
 	get state () {

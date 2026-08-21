@@ -3,6 +3,10 @@ export default class DeepSeekProvider extends Provider {
     async request(req) {
         let iterations = 0;
         const messages = req.messages.slice();
+        messages.unshift({
+            role: "system",
+            content: req.systemPrompt
+        });
         let tools_to_send = [];
         if (req.tools) {
             tools_to_send = req.tools.map(t => {

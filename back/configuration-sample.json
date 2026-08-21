@@ -2,6 +2,7 @@
 	"client_dir": "../client",
 	"port": 8080,
 	"agents_dir": "../agents",
+	"reports_dir": "../reports",
 	"providers": {
 		"deepSeek": {
 			"baseURL": "",
