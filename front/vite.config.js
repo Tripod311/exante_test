@@ -12,6 +12,7 @@ export default defineConfig({
   build: {
     outDir: '../../client',
     emptyOutDir: true,
-    minify: false
+    minify: false,
+    sourceMap: true
   }
 })

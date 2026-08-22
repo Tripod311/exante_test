@@ -5,10 +5,11 @@ import CustomerState from "../tools/customerState/tool.js"
 
 export default class Agent {
 	private provider: Provider;
+	private agent_type: string;
 	private conf: AgentConfiguration;
 	private prompt: string;
 	private tools: ProviderToolDescription[] = [];
-	private finishFunc: (provider: Provider, data: ReportData) => void;
+	private finishFunc: (data: ReportData) => void;
 
 	private customerState: CustomerState;
 	private history: Message[] = [];
@@ -20,11 +21,13 @@ export default class Agent {
 
 	constructor (
 		conf: AgentConfiguration,
+		agent_type: string,
 		prompt: string,
 		provider: Provider,
-		finishFunc: (provider: Provider, data: ReportData) => void
+		finishFunc: (data: ReportData) => void
 	) {
 		this.conf = conf;
+		this.agent_type = agent_type;
 		this.prompt = `${prompt}\n${update_customer_state_modifier}`;
 		this.provider = provider;
 		this.customerState = new CustomerState(this.conf.initialState);
@@ -62,7 +65,45 @@ export default class Agent {
 	}
 
 	finalize () {
+		const initialState = Object.assign({}, this.conf.initialState);
+		const finalState = this.customerState.result;
+		const delta: Record<string, number> = {};
 
+		for (const param in finalState) {
+			const initial = (initialState as any)[param] ?? 0;
+			const final = (finalState as any)[param] as number;
+
+			delta[param] = final - initial;
+		}
+
+		const impactEvents = this.customerState.evolution.slice();
+		const processedConversation: ReportMessageData[] = [];
+
+		for (let i=0; i<this.history.length; i++) {
+			if (impactEvents[0] !== undefined && impactEvents[0].index === i) {
+				const ev = impactEvents.shift();
+
+				processedConversation.push({
+					role: this.history[i]!.role,
+					content: this.history[i]!.content as string,
+					impact: ev!.impact
+				});
+			} else {
+				processedConversation.push({
+					role: this.history[i]!.role,
+					content: this.history[i]!.content as string
+				});
+			}
+		}
+
+		this.finishFunc({
+			agent_type: this.agent_type,
+			role: this.prompt,
+			initialState: initialState,
+			finalState: finalState,
+			stateDelta: delta,
+			conversation: processedConversation
+		});
 	}
 
 	async processMessage (message: string): Promise<string> {

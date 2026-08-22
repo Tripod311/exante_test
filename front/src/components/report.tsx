@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react"
+import { useParams, useNavigate } from "react-router-dom";
+import Markdown from "react-markdown";
 import StateRow from "./stateRow.jsx"
+
+import getReport from "../api/getReport.js"
 
 interface CustomerState {
 	interest: number;
@@ -23,11 +27,30 @@ interface ReportData {
 	result: string;
 }
 
-interface ReportProps {
-	id: string;
-}
+export default function Report() {
+	const { chatId } = useParams();
+	const navigate = useNavigate();
+	const [ report, setReport ] = useState<ReportData | undefined>(undefined);
 
-export default function Report({ id }: ReportProps) {
+	useEffect(() => {
+		window.showSpinner();
+
+		getReport(chatId).then(
+			(response: APIResponse) => {
+				window.closeModals();
+
+				if (response.error) {
+					window.showNotification("Error", response.details, () => {
+						window.closeModals();
+						navigate("/");
+					});
+				} else {
+					setReport(response.data);
+				}
+			}
+		);
+	}, []);
+
 	const copyLink = async () => {
 		await navigator.clipboard.writeText(window.location.href);
 	};
@@ -41,7 +64,7 @@ export default function Report({ id }: ReportProps) {
 							Conversation report
 						</h1>
 						<p className="mt-1 text-sm text-gray-500">
-							Chat id: {id} (${report.agent_type})
+							Chat id: {chatId}, Agent: {report?.agent_type}
 						</p>
 					</div>
 
@@ -70,33 +93,17 @@ export default function Report({ id }: ReportProps) {
 						</h2>
 
 						<div className="flex flex-col divide-y divide-gray-100">
-							<StateRow
-								label="Interest"
-								initial={report.initialState.interest}
-								final={report.finalState.interest}
-								delta={report.stateDelta.interest}
-							/>
-
-							<StateRow
-								label="Trust"
-								initial={report.initialState.trust}
-								final={report.finalState.trust}
-								delta={report.stateDelta.trust}
-							/>
-
-							<StateRow
-								label="Clarity"
-								initial={report.initialState.clarity}
-								final={report.finalState.clarity}
-								delta={report.stateDelta.clarity}
-							/>
-
-							<StateRow
-								label="Readiness"
-								initial={report.initialState.readiness}
-								final={report.finalState.readiness}
-								delta={report.stateDelta.readiness}
-							/>
+							{
+								report === undefined ? null : Object.keys(report?.stateDelta).map((key: string) => {
+									return <StateRow
+										key={key}
+										label={key}
+										initial={report?.initialState[key]}
+										final={report?.finalState[key]}
+										delta={report?.stateDelta[key]}
+									/>
+								})
+							}
 						</div>
 					</section>
 
@@ -105,8 +112,10 @@ export default function Report({ id }: ReportProps) {
 							AI assessment
 						</h2>
 
-						<div className="whitespace-pre-wrap text-sm leading-6 text-gray-700">
-							{report.result}
+						<div className="prose">
+							<Markdown>
+								{report?.result}
+							</Markdown>
 						</div>
 					</section>
 
@@ -118,7 +127,7 @@ export default function Report({ id }: ReportProps) {
 						</div>
 
 						<div className="flex flex-col gap-4 p-5">
-							{report.conversation.map((message, index) =>
+							{report?.conversation.map((message, index) =>
 								message.role === "assistant" ? (
 									<div
 										key={index}

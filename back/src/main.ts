@@ -50,10 +50,17 @@ class API {
 		}
 	}
 
-	start () {
-		const server = this.instance.listen(this.config.port, () => {
-			console.log(`Listening on ${this.config.port}`);
-		});
+	async start () {
+		try {
+			await AgentManager.setup(this.providers[this.config.report_provider], this.config.reports_dir, this.config.agents_dir);
+
+			const server = this.instance.listen(this.config.port, () => {
+				console.log(`Listening on ${this.config.port}`);
+			});
+		} catch (err: any) {
+			console.error(`Error on start: ${err}`);
+			process.exit(1);
+		}
 	}
 
 	async stop(): Promise<void> {
@@ -108,7 +115,7 @@ class API {
 		} catch (err: any) {
 			res.json({
 				error: true,
-				details: err
+				details: err.toString()
 			});
 		}
 	}
@@ -170,7 +177,17 @@ class API {
 	}
 
 	async getReport (req: Request, res: Response) {
-
+		try {
+			res.json({
+				error: false,
+				data: await AgentManager.getReport(req.params.id as string)
+			});
+		} catch (err: any) {
+			res.json({
+				error: true,
+				details: err.toString()
+			});
+		}
 	}
 }
 
@@ -204,9 +221,4 @@ async function shutdown() {
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 
-AgentManager.setup(config.reports_dir, config.agents_dir).then(() => {
-	api.start();
-}, (err: any) => {
-	console.error(`Agent manager couldn't start: ${err}`);
-	process.exit(1);
-});
+api.start();

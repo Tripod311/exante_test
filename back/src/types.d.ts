@@ -5,6 +5,7 @@ declare global {
 		providers: Record<string, ProviderConfiguration>;
 		agents_dir: string;
 		reports_dir: string;
+		report_provider: string;
 	}
 
 	interface ProviderConfiguration {
@@ -62,10 +63,11 @@ declare global {
 	type ReportMessageData = {
 		role: string;
 		content: string;
-		impact: CustomerState;
+		impact?: CustomerState;
 	}
 
 	interface ReportData {
+		agent_type: string;
 		role: string;
 		initialState: CustomerState;
 		finalState: CustomerState;

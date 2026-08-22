@@ -10,6 +10,7 @@ const UUIDRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a
 export default class AgentManager {
 	private static reports_dir: string = "../reports";
 	private static agents_dir: string = "../agents";
+	private static report_provider?: Provider;
 
 	static reports: Set<string> = new Set();
 	static chats: Record<string, Agent> = {};
@@ -50,11 +51,9 @@ export default class AgentManager {
 		}
 
 		const confPath = path.resolve(agentPath, "configuration.json");
-		const analyzerPath = path.resolve(agentPath, "analyzer.md");
 		const rolePath = path.resolve(agentPath, "role.md");
 
 		let configuration: AgentConfiguration;
-		let analyzer: string;
 		let role: string;
 
 		try {
@@ -62,12 +61,6 @@ export default class AgentManager {
 			configuration = JSON.parse(data) as AgentConfiguration;
 		} catch (err: any) {
 			throw new Error(`Agent ${agent_type} error, corrupted configuration file: ${err}`);
-		}
-
-		try {
-			analyzer = await fs.promises.readFile(analyzerPath, "utf-8");
-		} catch (err: any) {
-			throw new Error(`Agent ${agent_type} error, corrupted analyzer file: ${err}`);
 		}
 
 		try {
@@ -82,14 +75,14 @@ export default class AgentManager {
 			throw new Error(`Agent ${agent_type} error, provider ${configuration.provider} not found`);
 		}
 
-		AgentManager.chats[id] = new Agent(configuration, role, provider, AgentManager.onAgentFinished.bind({}, id));
+		AgentManager.chats[id] = new Agent(configuration, agent_type, role, provider, AgentManager.onAgentFinished.bind({}, id));
 
 		return id;
 	}
 
-	private static onAgentFinished (chatId: string, provider: Provider, data: ReportData) {
+	private static onAgentFinished (chatId: string, data: ReportData) {
 		console.log(`Processing chat ${chatId} results`);
-		const pr = Analyzer.generateReport(provider, data)
+		const pr = Analyzer.generateReport(AgentManager.report_provider as Provider, data)
 			.then(() => {
 				return fs.promises.writeFile(`${AgentManager.reports_dir}/${chatId}.json`, JSON.stringify(data));
 			})
@@ -137,7 +130,7 @@ export default class AgentManager {
 		return chat.processMessage(message);
 	}
 
-	static async getReport (id: string): ReportData {
+	static async getReport (id: string): Promise<ReportData> {
 		if (!UUIDRegex.test(id)) throw new Error(`Invalid chat id: ${id}`);
 
 		let exists = false;
@@ -163,11 +156,14 @@ export default class AgentManager {
 		return JSON.parse(data) as ReportData;
 	}
 
-	static async setup (reports_dir: string, agents_dir: string) {
+	static async setup (report_provider: Provider | undefined, reports_dir: string, agents_dir: string) {
 		await fs.promises.mkdir(reports_dir, {
 			recursive: true
 		});
 
+		if (!report_provider) throw new Error(`Report provider is not defined`);
+
+		AgentManager.report_provider = report_provider;
 		AgentManager.agents_dir = agents_dir;
 		AgentManager.reports_dir = reports_dir;
 		const fullPath = path.resolve(reports_dir);
@@ -175,14 +171,14 @@ export default class AgentManager {
 
 		const reports = entries
 			.filter(entry => entry.isFile())
-			.map(entry => entry.name)
 			.filter(entry => {
-				if (!entry.endsWith('.json')) return false;
+				if (!entry.name.endsWith('.json')) return false;
 
-				const withoutExt = entry.slice(0, entry.length-5);
+				const withoutExt = entry.name.slice(0, entry.name.length-5);
 
 				return UUIDRegex.test(withoutExt);
-			});
+			})
+			.map(entry => entry.name.slice(0, entry.name.length-5));
 
 		AgentManager.reports = new Set(reports);
 	}

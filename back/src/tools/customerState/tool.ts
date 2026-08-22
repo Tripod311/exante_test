@@ -21,6 +21,7 @@ export default class CustomerStateTool {
 	}
 
 	async update (args: Record<string, unknown>) {
+		console.log(`Customer state update: ${JSON.stringify(args)}`);
 		this.currentImpact = args as unknown as CustomerState;
 	}
 
@@ -44,9 +45,15 @@ export default class CustomerStateTool {
 
 			this.currentImpact = undefined;
 		}
+
+		return "State changed";
 	}
 
 	reset () {
 		this.currentImpact = undefined;
+	}
+
+	get result (): CustomerState {
+		return Object.assign({}, this.currentState);
 	}
 }

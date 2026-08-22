@@ -3,8 +3,23 @@
 	"port": 8080,
 	"agents_dir": "../agents",
 	"reports_dir": "../reports",
+	"report_provider": "reporter",
 	"providers": {
-		"deepSeek": {
+		"chatGPT": {
+			"type": "openAI",
+			"baseURL": "",
+			"apiKey": "",
+			"headers": {},
+			"params": {}
+		},
+		"gemini": {
+			"type": "gemini",
+			"baseURL": "",
+			"apiKey": "",
+			"headers": {},
+			"params": {}
+		},
+		"chatGPT_light": {
 			"type": "openAI",
 			"baseURL": "",
 			"apiKey": "",

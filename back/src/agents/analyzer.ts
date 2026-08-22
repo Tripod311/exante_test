@@ -32,32 +32,7 @@ Evaluate the conversation in these areas:
 4. Handling objections — whether concerns raised by the customer were acknowledged and addressed meaningfully.
 5. Progression — whether the salesperson moved the conversation toward an appropriate next step without forcing it.
 
-Return the report in the following JSON format:
-
-{
-  "summary": "Brief overall assessment in 2-4 sentences.",
-  "strengths": [
-    "Specific thing the salesperson did well"
-  ],
-  "weaknesses": [
-    "Specific problem or missed opportunity"
-  ],
-  "key_moments": [
-    {
-      "message_index": 0,
-      "impact": "positive",
-      "explanation": "Why this message significantly affected the conversation"
-    }
-  ],
-  "customer_outcome": "Short explanation of how the customer's interest, trust, clarity and readiness changed during the conversation.",
-  "recommendations": [
-    "Concrete suggestion for the salesperson's next conversation"
-  ]
-}
-
-Use "positive" or "negative" for key_moments.
-Include only genuinely important moments.
-Usually return 1-3 strengths, 1-3 weaknesses, 1-3 key moments, and 1-3 recommendations.
+Return the report in the markdown format, try to mention 1-3 strengths, 1-3 weaknesses, 1-3 key moments, and 1-3 recommendations.
 `.trim();
 
 const taskPrompt = `
@@ -79,6 +54,7 @@ CONVERSATION:
 
 export default class Analyzer {
 	static async generateReport (provider: Provider, data: ReportData) {
+		debugger;
 		const task = taskPrompt
 			.replace("%ROLE%", data.role)
 			.replace("%INITIAL_STATE%", JSON.stringify(data.initialState))
@@ -91,7 +67,7 @@ export default class Analyzer {
 			messages: [
 				{
 					role: "user",
-					content: taskPrompt
+					content: task
 				}
 			],
 			tools: []

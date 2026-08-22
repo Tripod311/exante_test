@@ -82,16 +82,7 @@ export default function Chat() {
 	const navigate = useNavigate();
 	const chatRef = useRef<HTMLDivElement>(null);
 
-	const [messages, setMessages] = useState<Message[]>([
-		{
-			role: "assistant",
-			content: "Hello. What would you like to discuss?"
-		},
-		{
-			role: "user",
-			content: "I'd like to know more about your investment options."
-		}
-	]);
+	const [messages, setMessages] = useState<Message[]>([]);
 	const [input, setInput] = useState("");
 	const [started, setStarted] = useState(false);
 	const [finished, setFinished] = useState(false);
@@ -193,7 +184,7 @@ export default function Chat() {
 	useEffect(scrollToBottom, [ messages ]);
 
 	function getReport () {
-
+		navigate(`/${chatId}/report`);
 	}
 
 	if (!started && !finished) {
@@ -234,15 +225,15 @@ export default function Chat() {
 
 				<div className="min-h-0 flex-1 overflow-y-auto" ref={chatRef}>
 					<div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-6 py-6">
-						{messages.map(message =>
+						{messages.map((message, index) =>
 							message.role === "assistant" ? (
 								<AgentMessage
-									key={message.id}
+									key={message.index}
 									content={message.content}
 								/>
 							) : (
 								<UserMessage
-									key={message.id}
+									key={message.index}
 									content={message.content}
 								/>
 							)

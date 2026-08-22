@@ -5,7 +5,7 @@ interface StateRowProps {
 	delta: number;
 }
 
-function StateRow({
+export default function StateRow({
 	label,
 	initial,
 	final,
