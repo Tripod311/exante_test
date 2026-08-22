@@ -3,6 +3,7 @@ import path from "path"
 import fs from "fs"
 import type Provider from "../providers/provider.js"
 import Agent from "./agent.js"
+import Analyzer from "./analyzer.js"
 
 const UUIDRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -12,6 +13,7 @@ export default class AgentManager {
 
 	static reports: Set<string> = new Set();
 	static chats: Record<string, Agent> = {};
+	static pending_reports: Record<string, Promise<void>> = {};
 
 	static async listAgents (): Promise<string[]> {
 		const abs = path.resolve(AgentManager.agents_dir);
@@ -80,9 +82,25 @@ export default class AgentManager {
 			throw new Error(`Agent ${agent_type} error, provider ${configuration.provider} not found`);
 		}
 
-		AgentManager.chats[id] = new Agent(configuration, analyzer, role, provider);
+		AgentManager.chats[id] = new Agent(configuration, role, provider, AgentManager.onAgentFinished.bind({}, id));
 
 		return id;
+	}
+
+	private static onAgentFinished (chatId: string, provider: Provider, data: ReportData) {
+		console.log(`Processing chat ${chatId} results`);
+		const pr = Analyzer.generateReport(provider, data)
+			.then(() => {
+				return fs.promises.writeFile(`${AgentManager.reports_dir}/${chatId}.json`, JSON.stringify(data));
+			})
+			.then(() => {
+				console.log(`Report for chat ${chatId} successfully generated`);
+				delete AgentManager.pending_reports[chatId];
+				AgentManager.reports.add(chatId);
+				delete AgentManager.chats[chatId];
+			});
+
+		AgentManager.pending_reports[chatId] = pr;
 	}
 
 	static startDialog (id: string) {
@@ -90,7 +108,7 @@ export default class AgentManager {
 
 		if (chat === undefined) throw new Error(`Chat ${id} not found`);
 
-		chat.customer.startDialog();
+		chat.startDialog();
 	}
 
 	static finishDialog (id: string) {
@@ -98,7 +116,7 @@ export default class AgentManager {
 
 		if (chat === undefined) throw new Error(`Chat ${id} not found`);
 
-		chat.customer.finishDialog();
+		chat.finishDialog();
 	}
 
 	static loadState (id: string) {
@@ -106,7 +124,7 @@ export default class AgentManager {
 
 		if (chat === undefined) throw new Error(`Chat ${id} not found`);
 
-		return chat.customer.state;
+		return chat.state;
 	}
 
 	static async processMessage (id: string, message: string): Promise<string> {
@@ -114,13 +132,35 @@ export default class AgentManager {
 
 		if (chat === undefined) throw new Error(`Chat ${id} not found`);
 
-		if (chat.customer.finished) throw new Error(`Chat ${id} is already finished`);
+		if (chat.finished) throw new Error(`Chat ${id} is already finished`);
 		
-		return chat.customer.processMessage(message);
+		return chat.processMessage(message);
 	}
 
-	static async getReport (id: string) {
+	static async getReport (id: string): ReportData {
+		if (!UUIDRegex.test(id)) throw new Error(`Invalid chat id: ${id}`);
 
+		let exists = false;
+
+		if (AgentManager.pending_reports[id]) {
+			// report is generating
+
+			exists = true;
+			await AgentManager.pending_reports[id];
+		} else if (AgentManager.chats[id] && AgentManager.chats[id].finished) {
+			// chat is finished, but report generation failed
+
+			exists = true;
+			AgentManager.chats[id].finalize();
+			await AgentManager.pending_reports[id];
+		} else if (AgentManager.reports.has(id)) {
+			exists = true;
+		}
+
+		if (!exists) throw new Error(`Report ${id} not found`);
+
+		const data = await fs.promises.readFile(`${AgentManager.reports_dir}/${id}.json`, "utf-8");
+		return JSON.parse(data) as ReportData;
 	}
 
 	static async setup (reports_dir: string, agents_dir: string) {

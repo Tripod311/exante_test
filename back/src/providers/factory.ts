@@ -1,18 +1,11 @@
 import Provider from "./provider.js"
-import DeepSeekProvider from "./deepSeek.js"
-import LlamaProvider from "./llama.js"
+import OpenAIProvider from "./openAI.js"
 
-export default function createProvider (type: string, configuration: ProviderConfiguration): Provider {
-	switch (type) {
-	case "deepSeek":
-		return new DeepSeekProvider(configuration);
-	case "llama":
-		return new LlamaProvider(configuration);
-	// case "openAI":
-	// 	break;
-	// case "anthropic":
-	// 	break;
+export default function createProvider (configuration: ProviderConfiguration): Provider {
+	switch (configuration.type) {
+	case "openAI":
+		return new OpenAIProvider(configuration);
 	default:
-		throw new Error(`Unknown provider type ${type}`);
+		throw new Error(`Unknown provider type ${configuration.type}`);
 	}
 }

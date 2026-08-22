@@ -5,6 +5,7 @@
 	"reports_dir": "../reports",
 	"providers": {
 		"deepSeek": {
+			"type": "openAI",
 			"baseURL": "",
 			"apiKey": "",
 			"headers": {},

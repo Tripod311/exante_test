@@ -136,6 +136,10 @@ export default function Chat() {
 					setMessages(prev => [
 						...prev,
 						{
+							role: "user",
+							content: content
+						},
+						{
 							role: "assistant",
 							content: response.data
 						}
@@ -224,7 +228,7 @@ export default function Chat() {
 							active:scale-[0.98]
 						"
 					>
-						Finish dialog and show report
+						Finish dialog
 					</button>
 				</header>
 

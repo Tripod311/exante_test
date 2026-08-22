@@ -1,0 +1,10 @@
+{
+	"provider": "nvidia",
+	"timeout": 5,
+	"initialState": {
+		"interest": 5,
+		"trust": 5,
+		"clarity": 7,
+		"readiness": 6
+	}
+}

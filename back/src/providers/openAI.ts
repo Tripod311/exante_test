@@ -1,6 +1,6 @@
 import Provider from "./provider.js"
 
-interface DeepSeekToolDescription {
+interface OpenAIToolDescription {
 	type: "function";
 	function: {
 		name: string;
@@ -9,7 +9,7 @@ interface DeepSeekToolDescription {
 	}
 }
 
-interface DeepSeekResponse {
+interface OpenAIResponse {
 	id: string;
 	object: string;
 	created: number;
@@ -50,7 +50,7 @@ interface DeepSeekResponse {
 	};
 }
 
-export default class DeepSeekProvider extends Provider {
+export default class OpenAIProvider extends Provider {
 	async request(req: ProviderRequest): Promise<string> {
 		let iterations = 0;
 		const messages = req.messages.slice();
@@ -58,7 +58,7 @@ export default class DeepSeekProvider extends Provider {
 			role: "system",
 			content: req.systemPrompt
 		});
-		let tools_to_send: DeepSeekToolDescription[] = [];
+		let tools_to_send: OpenAIToolDescription[] = [];
 		if (req.tools) {
 			tools_to_send = req.tools.map(t => {
 				return {
@@ -89,7 +89,7 @@ export default class DeepSeekProvider extends Provider {
 			}
 
 			if (response.choices.length === 0) {
-				throw new Error(`DeepSeek returned no content`);
+				throw new Error(`OpenAI returned no content`);
 			}
 
 			const msg = response.choices[0]!.message;
@@ -119,7 +119,7 @@ export default class DeepSeekProvider extends Provider {
 				const content = msg.content;
 
 				if (!content) {
-					throw new Error(`DeepSeek returned no content`);
+					throw new Error(`OpenAI returned no content`);
 				} else {
 					return content as string;
 				}
@@ -140,20 +140,25 @@ export default class DeepSeekProvider extends Provider {
 	private async send (
 		model: string,
 		messages: Message[],
-		tools?: DeepSeekToolDescription[],
+		tools?: OpenAIToolDescription[],
 		temperature?: number,
 		topP?: number,
 		maxTokens?: number
-	): Promise<DeepSeekResponse> {
+	): Promise<OpenAIResponse> {
 		const headers: Record<string, string> = {
-			"Content-Type": "application/json",
-			"Authorization": `Bearer ${this.configuration.apiKey}`
+			"Content-Type": "application/json"
 		};
+
+		if (this.configuration.apiKey !== undefined) {
+			headers["Authorization"] = `Bearer ${this.configuration.apiKey}`;
+		}
+
 		if (this.configuration.headers) {
 			for (const name in this.configuration.headers) {
 				headers[name] = this.configuration.headers[name] as string;
 			}
 		}
+
 		const params: Record<string, unknown> = {
 			model,
 			messages,
@@ -162,24 +167,42 @@ export default class DeepSeekProvider extends Provider {
 			top_p: topP,
 			max_tokens: maxTokens
 		};
+
 		if (this.configuration.params) {
 			for (const name in this.configuration.params) {
 				params[name] = this.configuration.params[name];
 			}
 		}
 
-		const response = await fetch(this.configuration.baseURL, {
-			method: "POST",
-			headers: headers,
-			body: JSON.stringify(params)
-		});
+		const maxRetries = 3;
 
-		if (!response.ok) {
+		for (let attempt = 0; attempt <= maxRetries; attempt++) {
+			const response = await fetch(this.configuration.baseURL, {
+				method: "POST",
+				headers,
+				body: JSON.stringify(params)
+			});
+
+			if (response.ok) {
+				return await response.json() as OpenAIResponse;
+			}
+
+			if (response.status === 429 && attempt < maxRetries) {
+				const retryAfter = response.headers.get("retry-after");
+
+				const delay = retryAfter
+					? Number(retryAfter) * 1000
+					: 1000 * 2 ** attempt;
+
+				await new Promise(resolve => setTimeout(resolve, delay));
+				continue;
+			}
+
 			throw new Error(
-				`DeepSeek API error ${response.status}: ${await response.text()}`
+				`OpenAI API error ${response.status}: ${await response.text()}`
 			);
 		}
 
-		return await response.json() as DeepSeekResponse;
+		throw new Error("OpenAI API request failed after retries");
 	}
 }

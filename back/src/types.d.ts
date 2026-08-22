@@ -8,6 +8,7 @@ declare global {
 	}
 
 	interface ProviderConfiguration {
+		type: string;
 		baseURL: string;
 		apiKey: string;
 		model: string;
@@ -20,6 +21,12 @@ declare global {
 	interface AgentConfiguration {
 		provider: string;
 		timeout: number;
+		initialState: {
+			interest: number;
+			trust: number;
+			clarity: number;
+			readiness: number;
+		};
 		temperature?: number;
 		topP?: number;
 	}
@@ -30,7 +37,7 @@ declare global {
 		tool_call_id?: string;
 	}
 
-	export interface ProviderToolDescription {
+	interface ProviderToolDescription {
 		name: string;
 		description: string;
 		parameters: Record<string, unknown>;
@@ -38,7 +45,7 @@ declare global {
 		call: (args: Record<string, unknown>) => Promise<unknown>;
 	}
 
-	export interface ProviderRequest {
+	interface ProviderRequest {
 		systemPrompt: string;
 		messages: Message[];
 		tools?: ProviderToolDescription[];
@@ -46,10 +53,25 @@ declare global {
 		topP?: number;
 	}
 
-	export interface APIResponse {
+	interface APIResponse {
 		error: boolean;
 		details?: string;
 		data?: unknown;
+	}
+
+	type ReportMessageData = {
+		role: string;
+		content: string;
+		impact: CustomerState;
+	}
+
+	interface ReportData {
+		role: string;
+		initialState: CustomerState;
+		finalState: CustomerState;
+		stateDelta: CustomerState;
+		conversation: ReportMessageData[];
+		result?: string;
 	}
 }
 

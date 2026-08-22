@@ -46,7 +46,7 @@ class API {
 
 	createProviders () {
 		for (const name in this.config.providers) {
-			this.providers[name] = createProvider(name, this.config.providers[name] as ProviderConfiguration);
+			this.providers[name] = createProvider(this.config.providers[name] as ProviderConfiguration);
 		}
 	}
 
