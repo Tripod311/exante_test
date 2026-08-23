@@ -120,7 +120,7 @@ export default class AgentManager {
 		return chat.state;
 	}
 
-	static async processMessage (id: string, message: string): Promise<string> {
+	static async processMessage (id: string, message: string): Promise<{ response: string; finished: boolean; }> {
 		const chat = AgentManager.chats[id];
 
 		if (chat === undefined) throw new Error(`Chat ${id} not found`);

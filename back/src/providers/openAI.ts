@@ -9,6 +9,13 @@ interface OpenAIToolDescription {
 	}
 }
 
+interface OpenAIForcedTool {
+	type: "function";
+	function: {
+		name: string;
+	};
+}
+
 interface OpenAIResponse {
 	id: string;
 	object: string;
@@ -71,6 +78,15 @@ export default class OpenAIProvider extends Provider {
 				}
 			});
 		}
+		let requiredTool: OpenAIForcedTool | undefined = undefined;
+		if (req.requiredTool) {
+			requiredTool = {
+				type: "function",
+				function: {
+					name: req.requiredTool
+				}
+			}
+		}
 
 		while (true) {
 			iterations++;
@@ -79,6 +95,7 @@ export default class OpenAIProvider extends Provider {
 				this.configuration.model,
 				messages,
 				tools_to_send,
+				requiredTool,
 				req.temperature,
 				req.topP,
 				this.configuration.maxTokens
@@ -141,6 +158,7 @@ export default class OpenAIProvider extends Provider {
 		model: string,
 		messages: Message[],
 		tools?: OpenAIToolDescription[],
+		requiredTool?: OpenAIForcedTool,
 		temperature?: number,
 		topP?: number,
 		maxTokens?: number
@@ -167,6 +185,10 @@ export default class OpenAIProvider extends Provider {
 			top_p: topP,
 			max_tokens: maxTokens
 		};
+
+		if (requiredTool !== undefined) {
+			params.tool_choice = requiredTool;
+		}
 
 		if (this.configuration.params) {
 			for (const name in this.configuration.params) {

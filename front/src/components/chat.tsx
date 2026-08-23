@@ -124,18 +124,37 @@ export default function Chat() {
 				if (response.error) {
 					window.showNotification("Error", response.details, window.closeModals);
 				} else {
-					setMessages(prev => [
-						...prev,
-						{
-							role: "user",
-							content: content
-						},
-						{
-							role: "assistant",
-							content: response.data
+					if (response.data.finished) {
+						if (response.data.response) {
+							setMessages(prev => [
+								...prev,
+								{
+									role: "user",
+									content: content
+								},
+								{
+									role: "assistant",
+									content: `%${response.data.response}\n\n\n-- THIS CONVERSATION IS FINISHED, WHEN YOU ARE READY CLICK FINISH DIALOG BUTTON TO PROCEED TO THE REPORT --`
+								}
+							]);
+							setInput("");	
+						} else {
+							setFinished(true);
 						}
-					]);
-					setInput("");
+					} else {
+						setMessages(prev => [
+							...prev,
+							{
+								role: "user",
+								content: content
+							},
+							{
+								role: "assistant",
+								content: response.data.response
+							}
+						]);
+						setInput("");
+					}
 				}
 			}
 		);

@@ -106,14 +106,26 @@ export default class Agent {
 		});
 	}
 
-	async processMessage (message: string): Promise<string> {
+	async processMessage (message: string): Promise<{ response: string; finished: boolean; }> {
+		if (!this.started) throw new Error(`ProcessMessage called on dialog that was not started yet`);
+
+		if (this.finished) {
+			return {
+				response: "",
+				finished: true
+			}
+		}
+
 		this.messagePromise = this.send(message);
 
 		const result = await this.messagePromise;
 
 		this.messagePromise = undefined;
 
-		return result;
+		return {
+			response: result,
+			finished: this.finished
+		}
 	}
 
 	private async send (message: string): Promise<string> {
@@ -157,5 +169,13 @@ export default class Agent {
 			finished: this.finished,
 			history: this.history
 		}
+	}
+
+	/* used by EvalRunner*/
+	reset () {
+		this.started = true;
+		this.finished = false;
+		this.history = [];
+		this.customerState = new CustomerState(this.conf.initialState);
 	}
 }

@@ -50,6 +50,7 @@ declare global {
 		systemPrompt: string;
 		messages: Message[];
 		tools?: ProviderToolDescription[];
+		requiredTool?: string;
 		temperature?: number;
 		topP?: number;
 	}
@@ -74,6 +75,37 @@ declare global {
 		stateDelta: CustomerState;
 		conversation: ReportMessageData[];
 		result?: string;
+	}
+	
+	interface EvalResult {
+		status: "pass" | "fail" | "warning" | "error";
+		details?: string;
+	}
+
+	interface EvalSuite {
+		name: string;
+		description: string;
+
+		tests: Record<
+			string,
+			(
+				agent: Agent,
+				judge: Judge
+			) => Promise<EvalResult>
+		>;
+	}
+
+	interface EvalSuiteResult {
+		name: string;
+		description: string;
+		result: {
+			total: number;
+			passed: number;
+			warnings: number;
+			failed: number;
+			errors: number;
+			tests: Record<string, EvalResult>
+		}
 	}
 }
 
