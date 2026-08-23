@@ -8,6 +8,7 @@ export interface CustomerState {
 export default class CustomerStateTool {
 	private currentState: CustomerState;
 	private currentImpact?: CustomerState;
+	private lastImpact?: CustomerState;
 	public index: number = 0;
 	public evolution: { impact: CustomerState; index: number; }[] = [];
 
@@ -43,6 +44,7 @@ export default class CustomerStateTool {
 			this.currentState.clarity = Math.min(10, Math.max(0, this.currentState.clarity + this.currentImpact.clarity));
 			this.currentState.readiness = Math.min(10, Math.max(0, this.currentState.readiness + this.currentImpact.readiness));
 
+			this.lastImpact = this.currentImpact;
 			this.currentImpact = undefined;
 		}
 
