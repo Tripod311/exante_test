@@ -33,6 +33,7 @@ function UserMessage({ content }: { content: string }) {
 }
 
 interface ChatPlaceholderProps {
+	agentName: string;
 	heading: string;
 	message: string;
 	buttonText: string;
@@ -44,7 +45,7 @@ function ChatPlaceholder(props: ChatPlaceholderProps) {
 		<div className="flex h-full w-full flex-col bg-gray-50">
 			<header className="border-b border-gray-200 bg-white px-6 py-4">
 				<h1 className="text-lg font-semibold text-gray-900">
-					Chat
+					Chat with { props.agentName }
 				</h1>
 			</header>
 
@@ -86,6 +87,7 @@ export default function Chat() {
 	const [input, setInput] = useState("");
 	const [started, setStarted] = useState(false);
 	const [finished, setFinished] = useState(false);
+	const [agentName, setAgentName] = useState("");
 
 	useEffect(() => {
 		window.showSpinner();
@@ -103,6 +105,7 @@ export default function Chat() {
 					setMessages(response.data.history as Message[]);
 					setStarted(response.data.started);
 					setFinished(response.data.finished);
+					setAgentName(response.data.type);
 				}
 			}
 		);
@@ -134,7 +137,7 @@ export default function Chat() {
 								},
 								{
 									role: "assistant",
-									content: `%${response.data.response}\n\n\n-- THIS CONVERSATION IS FINISHED, WHEN YOU ARE READY CLICK FINISH DIALOG BUTTON TO PROCEED TO THE REPORT --`
+									content: `%${response.data.response}\n\n\n-- THIS CONVERSATION IS FINISHED, CLICK FINISH DIALOG BUTTON TO PROCEED TO THE REPORT WHEN YOU ARE READY --`
 								}
 							]);
 							setInput("");	
@@ -209,6 +212,7 @@ export default function Chat() {
 	if (!started && !finished) {
 		return <ChatPlaceholder
 			action={start}
+			agentName={agentName}
 			heading="Session is not started yet"
 			message="Start the dialog when you are ready."
 			buttonText="Start dialog"
@@ -216,6 +220,7 @@ export default function Chat() {
 	} else if (finished) {
 		return <ChatPlaceholder
 			action={getReport}
+			agentName={agentName}
 			heading="Session is over"
 			message="Click the button below to see the results"
 			buttonText="Show results"
@@ -225,7 +230,7 @@ export default function Chat() {
 			<div className="flex h-full w-full flex-col bg-gray-50">
 				<header className="border-b border-gray-200 bg-white px-6 py-4 flex flex-row justify-between">
 					<h1 className="text-lg font-semibold text-gray-900">
-						Chat
+						Chat with {agentName}
 					</h1>
 					<button
 						onClick={finish}

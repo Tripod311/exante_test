@@ -110,11 +110,15 @@ export default class OpenAIProvider extends Provider {
 			}
 
 			const msg = response.choices[0]!.message;
-
+			msg.content = msg.content ?? "";
 			messages.push(msg);
 
 			if (msg.tool_calls && msg.tool_calls.length > 0) {
 				for (const call of msg.tool_calls) {
+					if (requiredTool !== undefined && call.function.name === requiredTool.function.name) {
+						requiredTool = undefined;
+					}
+
 					try {
 						const result = await this.callTool(req.tools as ProviderToolDescription[], call.function.name, JSON.parse(call.function.arguments));
 						messages.push({
@@ -225,6 +229,6 @@ export default class OpenAIProvider extends Provider {
 			);
 		}
 
-		throw new Error("OpenAI API request failed after retries");
+		throw new Error(`OpenAI API request failed after ${maxRetries} retries`);
 	}
 }

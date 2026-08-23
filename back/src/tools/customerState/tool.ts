@@ -22,8 +22,10 @@ export default class CustomerStateTool {
 	}
 
 	async update (args: Record<string, unknown>) {
-		console.log(`Customer state update: ${JSON.stringify(args)}`);
+		console.log(`Customer state update called`);
 		this.currentImpact = args as unknown as CustomerState;
+
+		return "State updated success";
 	}
 
 	commit () {
@@ -47,8 +49,6 @@ export default class CustomerStateTool {
 			this.lastImpact = this.currentImpact;
 			this.currentImpact = undefined;
 		}
-
-		return "State changed";
 	}
 
 	reset () {

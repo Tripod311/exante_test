@@ -26,6 +26,8 @@ There is a clear and meaningful violation of the requested criteria.
 
 You must always return the result using submit_judgement.
 Keep details concise and specific.
+
+After submitting judgement, write FINISH in response
 `.trim();
 
 const judgeTask = `

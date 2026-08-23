@@ -165,6 +165,7 @@ export default class Agent {
 
 	get state () {
 		return {
+			type: this.agent_type,
 			started: this.started,
 			finished: this.finished,
 			history: this.history

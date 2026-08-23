@@ -47,7 +47,7 @@ class EvalRunner {
 			if (!entry.isFile()) continue;
 			if (!entry.name.endsWith(".js")) continue;
 
-			const filePath = path.join(EvalRunner.baseEvalsDir, entry.name);
+			const filePath = path.join(fullPath, entry.name);
 
 			const mod = await import(
 				pathToFileURL(filePath).href
@@ -255,7 +255,7 @@ class EvalRunner {
 }
 
 async function runTests () {
-	const appConfigRaw = await fs.promises.readFile("./coinfiguration.json", "utf-8");
+	const appConfigRaw = await fs.promises.readFile("./configuration.json", "utf-8");
 	EvalRunner.applicationConfiguration = JSON.parse(appConfigRaw) as ApplicationConfiguration;
 
 	const agentType = process.argv[2];

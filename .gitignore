@@ -4,3 +4,4 @@ back/dist
 front/node_modules
 client
 reports
+agents/.*/regressions
