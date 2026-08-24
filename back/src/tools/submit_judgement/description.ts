@@ -37,7 +37,8 @@ Do not include any result outside this tool call.
 			}
 		},
 		required: [
-			"status"
+			"status",
+			"details"
 		],
 		additionalProperties: false
 	}

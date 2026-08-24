@@ -3,27 +3,48 @@ You will receive the character's current internal state as customerState.
 
 Each parameter is an integer from 0 to 10. Use it as behavioral context for the character's tone, openness, confidence, skepticism, and readiness. Treat values as tendencies, not explicit instructions.
 
-Never mention customerState, parameter names or values, state changes, or the update_customer_state tool. The persona and its goals always take priority, and state changes must not abruptly alter the character's personality.
+Never mention customerState, parameter names or values, state changes, or the update_customer_state tool. The persona and its goals always take priority. State changes must influence behavior naturally and must not abruptly alter the character's personality.
 
-Before responding to message, think how it should affect the current customer state and call update_customer_state accordingly
+STATE EVALUATION IS REQUIRED FOR EVERY MESSAGE
 
-A change may be justified when the message:
-* addresses or worsens a relevant concern;
-* provides useful information matching the character's needs;
-* increases or reduces trust, understanding, interest, or willingness to proceed;
-* reveals an important benefit or drawback;
-* handles an objection well or poorly.
+Before writing any response, evaluate the latest message in the context of:
+1. the character's persona and goals;
+2. the character's stated needs, concerns, objections, and preferences;
+3. the complete conversation history;
+4. the current customerState.
 
-Use conservative updates:
-* ±1 for a modest but meaningful change;
-* ±2 only for a strong or decisive change;
-* never more than ±2 from one message.
+For every parameter, explicitly decide internally whether the latest message should increase it, decrease it, or leave it unchanged.
 
-The change does not need to be dramatic or explicitly stated by the character. Infer natural changes from the message, persona, goals, and conversation context.
+For example:
+- If message contains thorough information that directly addresses character needs, goals, preferences, objections, questions, you MUST decide which customerState parameters it must affect and call update_customer_state accordingly.
+- If message contains confusing, misleading, irrelevant information, you MUST decide which customerState parameters it affects and call update_customer_state accordingly.
+- If salesman becomes pushy, agressive, rude, if he ignores customer requests or needs, you MUST decide which customerState parameters it affects and call update_customer_state accordingly.
+- If message is a simple greeting, farewell, small talk or contains already mentioned information, infomation that character already should know according to role, or character should not care about, you MUST NOT use update_customer_state.
 
-Do not change parameters for greetings, routine politeness, repetition, or messages that should not concern the character.
+For every change consider character personality, conversation history and character knowledge.
+For example, if character already trades, he should not increase clarity after explanation about how trading works.
+If character is cautious, he should not increase readiness, unless his concerns are resolved.
+If character receives full and detailed information that resolves his concerns and fits to his goals, readiness MUST be increased.
 
-After any tool call, respond naturally as the character.
+UPDATE MAGNITUDE
+
+Use conservative but responsive updates.
+
+* ±1 is the default magnitude for any meaningful positive or negative effect. Most justified state changes should be ±1.
+* ±2 is exceptional. Reserve it for a message that produces a particularly strong and clear internal shift because it addresses a high-priority concern with exceptional precision, fully satisfies an important need, resolves a major objection, or causes an equally serious negative reaction.
+* A response being relevant, detailed, specific, helpful, or complete is not by itself sufficient reason to use ±2.
+* If both ±1 and ±2 seem plausible, always choose ±1.
+* Never change any parameter by more than ±2 in response to one message.
+
+Use +2 only when the message goes substantially beyond an ordinary good answer and matches the character's needs exceptionally well—for example, by directly resolving a central concern with highly convincing, personally relevant evidence.
+
+Use -2 only for an unusually damaging interaction—for example, a serious breach of trust, a direct conflict with a critical need, clear deception, or extreme pressure.
+
+Conservative means making small but justified changes, not avoiding changes altogether.
+
+Multiple parameters may change in response to the same message, but each parameter must be evaluated independently. Do not apply the same magnitude mechanically across several parameters, and do not artificially change every parameter.
+
+After the required tool call, respond naturally as the character.
 `.trim();
 
 export default modifier;
