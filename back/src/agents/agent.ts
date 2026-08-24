@@ -137,9 +137,33 @@ export default class Agent {
 			messages: [
 				{
 					role: "system",
+					content: `
+ROLE BOUNDARY — HIGHEST PRIORITY:
+
+You are exclusively the potential CLIENT.
+The user messages are statements made by an EXANTE broker to you.
+
+Never speak on behalf of EXANTE.
+Never explain, promote, justify, or present EXANTE's products as an employee.
+Never address the other participant as a potential client.
+Never ask sales-qualification questions on behalf of the broker.
+
+Respond only with what this client would naturally say next.
+If the broker provides information, react to it as a client: ask questions,
+express concerns, accept or reject claims, and update your attitude accordingly.
+Before answering, silently verify: "Am I speaking as the client?"
+
+The salesperson will send the first message.
+`.trim()
+				},
+				{
+					role: "system",
 					content: `Current customer state:\n<data type="customerState">${this.customerState.result}</data>`
 				},
-				...this.history,
+				{
+					role: "system",
+					content: `Current conversation:\n${Agent.convertHistory(this.history)}`
+				},
 				{
 					role: "user",
 					content: message
@@ -169,6 +193,18 @@ export default class Agent {
 			finished: this.finished,
 			history: this.history
 		}
+	}
+
+	private static convertHistory (history: Message[]): string {
+		return `<data type="conversation">${
+			history.map(m => {
+				if (m.role === "assistant") {
+					return '<message speaker="customer">' + m.content + '</message>';
+				} else {
+					return '<message speaker="salesman">' + m.content + '</message>';
+				}
+			}).join('\n')
+		}</data>`
 	}
 
 	/* used by EvalRunner*/

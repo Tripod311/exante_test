@@ -1,5 +1,5 @@
 {
-	"provider": "nvidia",
+	"provider": "character",
 	"timeout": 5,
 	"initialState": {
 		"interest": 5,
