@@ -98,3 +98,19 @@ open:
 ```text
 http://localhost:8080
 ```
+
+# Running Evaluations
+
+To run the evaluation and regression test suites for an agent, open the back directory and run:
+
+```bash
+npm run eval <agent-name>
+```
+
+For example, to run the tests for the included Daniel demo agent:
+
+```bash
+npm run eval Daniel
+```
+
+The runner executes the agent's configured evaluation suites and reports passed, failed, warning, and error results. Regression results are saved automatically for later comparison.
