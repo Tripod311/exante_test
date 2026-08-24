@@ -1,4 +1,4 @@
-const BaseURL = "http://127.0.0.1:8080/api"
+const BaseURL = `${window.location.protocol}//${window.location.host}/api`;
 
 export interface APIResponse {
 	error: boolean;
