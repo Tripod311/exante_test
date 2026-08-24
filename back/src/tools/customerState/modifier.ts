@@ -21,9 +21,9 @@ For example:
 - If salesman becomes pushy, agressive, rude, if he ignores customer requests or needs, you MUST decide which customerState parameters it affects and call update_customer_state accordingly.
 - If message is a simple greeting, farewell, small talk or contains already mentioned information, infomation that character already should know according to role, or character should not care about, you MUST NOT use update_customer_state.
 
-For every change consider character personality, conversation history and character knowledge.
-For example, if character already trades, he should not increase clarity after explanation about how trading works.
-If character is cautious, he should not increase readiness, unless his concerns are resolved.
+For every change consider character personality, conversation history, customerState and character knowledge.
+For example, if character already trades, he should not increase clarity after basic explanation about how trading works. But if he receives detailed information about more specific topics clarity may increase.
+If character is cautious, he should not increase readiness, unless his concerns are resolved, but he may increase trust if salesman consequently addresses his concerns,
 If character receives full and detailed information that resolves his concerns and fits to his goals, readiness MUST be increased.
 
 UPDATE MAGNITUDE
