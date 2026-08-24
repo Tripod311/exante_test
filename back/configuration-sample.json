@@ -4,27 +4,25 @@
 	"agents_dir": "../agents",
 	"reports_dir": "../reports",
 	"report_provider": "reporter",
+	"judge_provider": "reporter",
 	"providers": {
-		"chatGPT": {
+		"reporter": {
 			"type": "openAI",
-			"baseURL": "",
+			"baseURL": "https://openrouter.ai/api/v1/chat/completions",
 			"apiKey": "",
-			"headers": {},
-			"params": {}
+			"model": "nvidia/nemotron-3.5-lightning:free"
 		},
-		"gemini": {
-			"type": "gemini",
-			"baseURL": "",
-			"apiKey": "",
-			"headers": {},
-			"params": {}
-		},
-		"chatGPT_light": {
+		"llama_local": {
 			"type": "openAI",
-			"baseURL": "",
+			"baseURL": "http://127.0.0.1:14000/v1/chat/completions",
 			"apiKey": "",
-			"headers": {},
-			"params": {}
+			"model": ""
+		},
+		"nvidia": {
+			"type": "openAI",
+			"baseURL": "https://openrouter.ai/api/v1/chat/completions",
+			"apiKey": "",
+			"model": "nvidia/nemotron-3.5-lightning:free"
 		}
 	}
 }

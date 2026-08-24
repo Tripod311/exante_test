@@ -259,7 +259,7 @@ async function runTests () {
 	EvalRunner.applicationConfiguration = JSON.parse(appConfigRaw) as ApplicationConfiguration;
 
 	const agentType = process.argv[2];
-	const judgeProvider = EvalRunner.applicationConfiguration.report_provider;
+	const judgeProvider = EvalRunner.applicationConfiguration.judge_provider;
 
 	await EvalRunner.loadDefaultEvals();
 	await EvalRunner.loadAgent(agentType as string);

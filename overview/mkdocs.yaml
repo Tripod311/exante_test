@@ -1,0 +1,13 @@
+site_name: EXANTE Sales Simulator
+
+docs_dir: docs
+site_dir: dist
+
+nav:
+  - Product Vision: index.md
+  - Architecture: architecture.md
+  - What I'm not doing: scope.md
+  - Questions & Assumptions: questions.md
+
+theme:
+  name: mkdocs

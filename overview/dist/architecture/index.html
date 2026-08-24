@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Architecture - EXANTE Sales Simulator</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/fontawesome.min.css" rel="stylesheet">
+        <link href="../css/brands.min.css" rel="stylesheet">
+        <link href="../css/solid.min.css" rel="stylesheet">
+        <link href="../css/v4-font-face.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" >
+        <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" disabled>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="..">EXANTE Sales Simulator</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="nav-item">
+                                <a href=".." class="nav-link">Product Vision</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="./" class="nav-link active" aria-current="page">Architecture</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../scope/" class="nav-link">What I'm not doing</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../questions/" class="nav-link">Questions & Assumptions</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ms-md-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href=".." class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="../scope/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-bs-level="1"><a href="#architecture" class="nav-link">Architecture</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#overview" class="nav-link">Overview</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#runtime-flow" class="nav-link">Runtime Flow</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#character-agent" class="nav-link">Character Agent</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#analyzer" class="nav-link">Analyzer</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#exante-knowledge" class="nav-link">EXANTE Knowledge</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#provider-interface" class="nav-link">Provider Interface</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#evaluation-and-regression-harness" class="nav-link">Evaluation and Regression Harness</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#reliability" class="nav-link">Reliability</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#scalability-and-evolution" class="nav-link">Scalability and Evolution</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<p align="center">
+  <a href="../assets/architecture.png" target="_blank" rel="noopener">
+    <img
+      src="/assets/architecture.png"
+      alt="Architecture diagram"
+      style="max-width: 100%; height: auto;"
+    >
+  </a>
+</p>
+
+<h1 id="architecture">Architecture</h1>
+<h2 id="overview">Overview</h2>
+<p>The application consists of a front-end SPA built with <strong>React, TypeScript, and Tailwind CSS</strong>, and a back end built with <strong>Express and TypeScript</strong>.</p>
+<p>The front end communicates with the back end through JSON-based REST requests.</p>
+<p>The back end is split into several logical modules:</p>
+<ol>
+<li>
+<p><strong>API</strong> — a thin Express layer that connects the web client to the rest of the back-end services over HTTP.</p>
+</li>
+<li>
+<p><strong>Session Manager</strong> — manages agent sessions. It creates chat sessions from persona artifacts, tracks their lifetime, and starts report generation when a conversation ends.</p>
+</li>
+<li>
+<p><strong>Character Agent</strong> — the runtime instance of a persona. It stores the conversation history and the current customer state, which can be modified through a dedicated tool.</p>
+</li>
+<li>
+<p><strong>LLM Provider</strong> — an abstraction over communication with language models. The current implementation uses the OpenAI-compatible protocol because it is widely supported. Additional providers, such as Anthropic or other APIs, can be added behind the same interface.</p>
+</li>
+</ol>
+<p>Multiple providers can be configured at the same time. This is intentional: report generation and evaluation usually benefit from a larger and more stable model, while character simulation can be tested with different models depending on latency, cost, and behavior. Provider and model selection is defined in <code>configuration.json</code>.</p>
+<ol>
+<li>
+<p><strong>Analyzer Agent</strong> — analyzes completed conversations and generates the final feedback report.</p>
+</li>
+<li>
+<p><strong>Testing Suite</strong> — a CLI entry point for running evals and regression tests against personas and agents using the same runtime mechanisms as the application itself.</p>
+</li>
+<li>
+<p><strong>Evaluation Judge</strong> — an auxiliary LLM-based evaluator used by tests where behavior cannot be checked reliably with deterministic code alone, such as whether a character stayed in role or reacted naturally to a situation.</p>
+</li>
+</ol>
+<p>The architecture deliberately keeps agent behavior, session orchestration, LLM access, and evaluation separate. This makes it possible to change models, prompts, personas, and test logic without tightly coupling those concerns.</p>
+<hr />
+<h2 id="runtime-flow">Runtime Flow</h2>
+<p>A normal session follows a simple flow:</p>
+<ol>
+<li>
+<p>The user selects a character in the web UI.</p>
+</li>
+<li>
+<p>The back end creates a new session and initializes the character using its persona artifacts and configuration. The client receives a unique session identifier.</p>
+</li>
+<li>
+<p>The user communicates with the Character Agent. During the conversation, the agent may update its internal customer state through the dedicated state tool.</p>
+</li>
+</ol>
+<p>A conversation ends either when the configured session timeout is reached or when the user explicitly finishes it from the UI.</p>
+<ol>
+<li>Once the session is complete, the Session Manager starts the Analyzer Agent.</li>
+</ol>
+<p>The analyzer receives:</p>
+<ul>
+<li>the persona description;</li>
+<li>the initial customer state;</li>
+<li>the final customer state;</li>
+<li>the accumulated state changes;</li>
+<li>the full conversation transcript;</li>
+<li>
+<p>relevant EXANTE product information.</p>
+</li>
+<li>
+<p>The generated report is returned to the UI.</p>
+</li>
+</ul>
+<p>A copy of the report data is also stored locally using the session UUID as its identifier. UUID collisions are practically negligible for this use case. The report can later be reopened from the UI through a shareable session link.</p>
+<p>The complete runtime loop is therefore:</p>
+<p><strong>persona → session → conversation → state changes → resolution → analysis → report</strong></p>
+<hr />
+<h2 id="character-agent">Character Agent</h2>
+<p>A character is assembled from several artifacts rather than being defined as a single large prompt.</p>
+<h3 id="persona-definition">Persona definition</h3>
+<p><code>role.md</code> defines the persistent aspects of the simulated client, such as:</p>
+<ul>
+<li>personality;</li>
+<li>goals;</li>
+<li>preferences;</li>
+<li>motivations;</li>
+<li>communication style;</li>
+<li>behavioral patterns;</li>
+<li>concerns and expectations.</li>
+</ul>
+<p>These characteristics are intended to remain stable throughout the session.</p>
+<h3 id="character-configuration">Character configuration</h3>
+<p><code>configuration.json</code> contains runtime settings such as:</p>
+<ul>
+<li>the LLM provider and model used by the character;</li>
+<li>conversation timeout;</li>
+<li>initial customer state.</li>
+<li>temperature and top_p parameters</li>
+</ul>
+<p>The current customer state consists of four dimensions:</p>
+<ul>
+<li><code>interest</code></li>
+<li><code>trust</code></li>
+<li><code>clarity</code></li>
+<li><code>readiness</code></li>
+</ul>
+<h3 id="customer-state">Customer state</h3>
+<p>Customer state represents the character's current attitude during the conversation.</p>
+<p>It is not intended to overwrite the persona. Instead, it modifies how the same persona behaves at a particular point in the dialogue.</p>
+<p>For example, a skeptical character should remain recognizably skeptical even after trust increases. Higher trust may make the character more open to explanations or next steps, but should not turn them into a fundamentally different person.</p>
+<p>The agent can modify its state through a dedicated tool. Updates are intentionally conservative and are applied as small deltas in response to meaningful salesperson messages.</p>
+<p>These changes serve three purposes:</p>
+<ul>
+<li>they affect later character behavior;</li>
+<li>they create a trace of how individual messages influenced the simulated customer;</li>
+<li>they provide additional evidence to the Analyzer.</li>
+</ul>
+<p>Customer state is therefore <strong>not a direct score of salesperson quality</strong>. It is better treated as one additional behavioral signal.</p>
+<hr />
+<h2 id="analyzer">Analyzer</h2>
+<p>The Analyzer Agent generates feedback after the conversation has ended.</p>
+<p>The conversation transcript is treated as the primary source of evidence. Customer state changes are supporting signals rather than absolute ground truth.</p>
+<p>The analyzer receives:</p>
+<ul>
+<li>the customer persona;</li>
+<li>initial and final state;</li>
+<li>total and per-message state changes;</li>
+<li>the complete transcript;</li>
+<li>EXANTE product context.</li>
+</ul>
+<p>It evaluates the conversation in areas such as:</p>
+<ul>
+<li>understanding the customer's goals and concerns;</li>
+<li>communication quality;</li>
+<li>trust building;</li>
+<li>objection handling;</li>
+<li>product relevance;</li>
+<li>missed opportunities;</li>
+<li>progression toward an appropriate next step.</li>
+</ul>
+<p>The analyzer is specifically instructed not to judge success only by whether the customer became more interested or more ready to proceed.</p>
+<p>A good conversation may correctly determine that the client is not a good fit, or may end without a sale.</p>
+<p>The report is intentionally concise. Its purpose is not to generate a long generic sales essay, but to identify a small number of useful strengths, weaknesses, key moments, and concrete recommendations.</p>
+<p>Where possible, feedback should be tied to specific parts of the conversation.</p>
+<hr />
+<h2 id="exante-knowledge">EXANTE Knowledge</h2>
+<p>The current proof of concept provides the Analyzer with a compact, curated set of EXANTE product facts directly in its prompt context.</p>
+<p>This information is used to:</p>
+<ul>
+<li>check whether salesperson claims about EXANTE are supported;</li>
+<li>determine whether suggested products or capabilities were relevant;</li>
+<li>identify clearly relevant EXANTE capabilities that were missed;</li>
+<li>avoid relying entirely on the model's pre-trained knowledge.</li>
+</ul>
+<p>A full retrieval system is deliberately outside the current prototype scope.</p>
+<p>For a production version, this can evolve into a maintained EXANTE knowledge base backed by RAG over official sources.</p>
+<p>A likely flow would be:</p>
+<p><strong>official EXANTE sources → ingestion/indexing → retrieval → Analyzer</strong></p>
+<p>This would make it possible to keep product information current without continuously expanding the evaluator prompt.</p>
+<p>The Analyzer is the primary consumer of this knowledge because factual grounding is especially important when evaluating what a salesperson said or could reasonably have suggested.</p>
+<hr />
+<h2 id="provider-interface">Provider Interface</h2>
+<p>Different LLM providers expose different APIs, message formats, tool-call formats, model settings, and edge cases.</p>
+<p>The application therefore isolates LLM communication behind a provider abstraction.</p>
+<p>Character, Analyzer, and Judge agents interact with a common interface instead of implementing provider-specific communication themselves.</p>
+<p>The provider layer is responsible for normalizing:</p>
+<ul>
+<li>message exchange;</li>
+<li>tool definitions;</li>
+<li>tool calls;</li>
+<li>tool results;</li>
+<li>model-specific request settings;</li>
+<li>response handling;</li>
+<li>the tool-call loop.</li>
+</ul>
+<p>The current implementation supports the OpenAI-compatible protocol because it is widely used and supported by multiple model providers.</p>
+<p>If a future model requires provider-specific behavior, the interface can be extended without changing the higher-level agent logic.</p>
+<p>This abstraction also makes it possible to use different models for different responsibilities.</p>
+<p>For example:</p>
+<ul>
+<li>a lower-latency model may be suitable for interactive character simulation;</li>
+<li>a larger and more stable model may be preferable for report generation;</li>
+<li>a separate model may be used by the evaluation judge.</li>
+</ul>
+<hr />
+<h2 id="evaluation-and-regression-harness">Evaluation and Regression Harness</h2>
+<p>LLM behavior cannot be tested in the same way as deterministic application code.</p>
+<p>Exact text output is usually not important, and the same valid behavior may be expressed differently across runs.</p>
+<p>For this reason, the project includes a dedicated evaluation and regression harness.</p>
+<p>Tests are implemented as separate JavaScript modules and can be executed through the CLI.</p>
+<p>Each test receives:</p>
+<ul>
+<li>an <code>agent</code> — a fully initialized character agent identical to the one used in a normal application session;</li>
+<li>a <code>judge</code> — an auxiliary evaluator agent that can assess semantic behavior where deterministic assertions are insufficient.</li>
+</ul>
+<p>A test returns:</p>
+<ul>
+<li>a status: <code>pass</code>, <code>fail</code>, <code>warning</code>, or <code>error</code>;</li>
+<li>optional details describing the result.</li>
+</ul>
+<h3 id="default-evals">Default evals</h3>
+<p>Default evals verify behavior that should be reasonable for all personas.</p>
+<p>Examples include:</p>
+<ul>
+<li>responding normally to a neutral greeting;</li>
+<li>reacting appropriately to obvious aggressive pressure;</li>
+<li>avoiding unnecessary state changes;</li>
+<li>using tools correctly;</li>
+<li>not exposing internal state or hidden instructions.</li>
+</ul>
+<h3 id="persona-specific-evals">Persona-specific evals</h3>
+<p>Persona-specific evals verify behavior that belongs to a particular character.</p>
+<p>Examples include:</p>
+<ul>
+<li>remaining consistent with the assigned role;</li>
+<li>preserving important personality traits;</li>
+<li>reacting to situations in a way that matches the persona;</li>
+<li>following persona-specific constraints.</li>
+</ul>
+<h3 id="judge-assisted-evaluation">Judge-assisted evaluation</h3>
+<p>Some properties cannot be reliably expressed as numeric or structural assertions.</p>
+<p>For example, code can verify that a tool was called, but it cannot easily determine whether a character's reply felt consistent with the role.</p>
+<p>In such cases, the test can run several dialogue turns and ask the Judge Agent to evaluate the resulting behavior.</p>
+<p>The judge itself returns a status and supporting details, which can then be used directly by the harness.</p>
+<p>This makes it possible to repeatedly run the same evaluation suite when prompts, models, or persona definitions change and detect behavioral regressions.</p>
+<p>The principle is similar to ordinary software regression testing:</p>
+<blockquote>
+<p><strong>Prompt and model changes should be treated like code changes: they pass through regression evaluation before being accepted.</strong></p>
+</blockquote>
+<p>The purpose is not to make LLM output deterministic. It is to detect when a change makes expected behavior measurably worse.</p>
+<hr />
+<h2 id="reliability">Reliability</h2>
+<p>LLM-generated dialogue and evaluation are probabilistic and should not be treated as objective truth.</p>
+<p>Modern models are capable of convincing role-play and useful qualitative analysis, but both the character prompts and evaluator prompts require validation.</p>
+<p>For production use, evaluator behavior should be calibrated against assessments from experienced sales managers.</p>
+<p>Human reviewers are especially important for determining:</p>
+<ul>
+<li>whether the simulated client behavior is realistic;</li>
+<li>whether the evaluation criteria reflect actual sales practice;</li>
+<li>whether identified strengths and weaknesses are useful;</li>
+<li>whether the system introduces systematic bias toward particular communication styles.</li>
+</ul>
+<p>The goal is not to claim that an LLM can provide a perfect objective measurement of sales ability.</p>
+<p>The goal is to make simulation and feedback sufficiently consistent, useful, and repeatable to support training and assessment.</p>
+<p>This will inevitably require iterative prompt design, evaluation data, human review, and experimentation.</p>
+<hr />
+<h2 id="scalability-and-evolution">Scalability and Evolution</h2>
+<p>The current implementation is intentionally minimal because the project is a proof of concept.</p>
+<p>A production system would depend heavily on deployment requirements and would likely need additional infrastructure for:</p>
+<ul>
+<li>authentication and authorization;</li>
+<li>persistent user accounts;</li>
+<li>conversation and report storage;</li>
+<li>historical progress tracking;</li>
+<li>centralized persona and scenario management;</li>
+<li>RAG and knowledge ingestion;</li>
+<li>monitoring and observability;</li>
+<li>analytics;</li>
+<li>administrative tooling;</li>
+<li>additional customer-state parameters and tools;</li>
+<li>improved UI and response streaming.</li>
+</ul>
+<p>The storage strategy would also depend on where and how the system is hosted.</p>
+<p>However, the main architectural boundaries are intended to remain useful as the system grows:</p>
+<ul>
+<li><strong>Provider</strong> isolates model communication;</li>
+<li><strong>Agent</strong> encapsulates LLM-driven behavior;</li>
+<li><strong>Session Manager</strong> controls conversation lifecycle;</li>
+<li><strong>Analyzer</strong> owns post-session feedback;</li>
+<li><strong>Harness and Judge</strong> provide behavioral regression testing.</li>
+</ul>
+<p>The components around these boundaries will likely evolve significantly in a real deployment, while the separation between orchestration, agent behavior, model access, and evaluation should remain relatively stable.</p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="../js/bootstrap.bundle.min.js"></script>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js"></script>
+        <script src="../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

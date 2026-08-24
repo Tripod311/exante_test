@@ -6,6 +6,7 @@ declare global {
 		agents_dir: string;
 		reports_dir: string;
 		report_provider: string;
+		judge_provider: string;
 	}
 
 	interface ProviderConfiguration {

@@ -132,15 +132,14 @@ export default class Agent {
 		this.customerState.reset();
 		this.customerState.index = this.history.length;
 
-		const history = this.history.map(m => JSON.stringify(m)).join('\n');
-
 		const response = await this.provider.request({
 			systemPrompt: this.prompt,
 			messages: [
 				{
 					role: "system",
-					content: `Conversation history:\n${history}`
+					content: `Current customer state:\n<data type="customerState">${this.customerState.result}</data>`
 				},
+				...this.history,
 				{
 					role: "user",
 					content: message

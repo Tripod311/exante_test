@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="None">
+        
+        
+        <link rel="shortcut icon" href="img/favicon.ico">
+        <title>EXANTE Sales Simulator</title>
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="css/fontawesome.min.css" rel="stylesheet">
+        <link href="css/brands.min.css" rel="stylesheet">
+        <link href="css/solid.min.css" rel="stylesheet">
+        <link href="css/v4-font-face.min.css" rel="stylesheet">
+        <link href="css/base.css" rel="stylesheet">
+        <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" >
+        <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" disabled>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body class="homepage">
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href=".">EXANTE Sales Simulator</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="nav-item">
+                                <a href="." class="nav-link active" aria-current="page">Product Vision</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="architecture/" class="nav-link">Architecture</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="scope/" class="nav-link">What I'm not doing</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="questions/" class="nav-link">Questions & Assumptions</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ms-md-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" class="nav-link disabled">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="architecture/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-bs-level="1"><a href="#product-vision" class="nav-link">Product Vision</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#purpose" class="nav-link">Purpose</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#evaluation-approach" class="nav-link">Evaluation Approach</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#repeatability-and-long-term-value" class="nav-link">Repeatability and Long-Term Value</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#current-scope" class="nav-link">Current Scope</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#possible-evolution" class="nav-link">Possible Evolution</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="product-vision">Product Vision</h1>
+<h2 id="purpose">Purpose</h2>
+<p>The EXANTE Sales Simulator is a training and assessment tool for evaluating a salesperson's ability to communicate with potential brokerage clients.</p>
+<p>For the salesperson, it provides a safe environment to practice conversations with different client types, test different approaches, and rehearse the sale of new products without creating any risk for real client relationships or real deals.</p>
+<p>For the company, the simulator can serve several purposes.</p>
+<h3 id="1-assessment-of-new-salespeople">1. Assessment of new salespeople</h3>
+<p>A simulated client conversation can be used as an additional signal during hiring or onboarding.</p>
+<p>Instead of relying only on interviews or theoretical questions, the company can observe how a salesperson behaves in a realistic conversation: how they identify needs, respond to objections, explain products, build trust, and move toward an appropriate next step.</p>
+<p>The resulting report provides an additional structured perspective on the conversation.</p>
+<h3 id="2-safe-practice">2. Safe practice</h3>
+<p>When a new product, service, or sales approach is introduced, employees can rehearse it before using it with real clients.</p>
+<p>AI clients can reproduce different attitudes, concerns, levels of financial knowledge, and communication styles while keeping the environment safe and repeatable.</p>
+<p>Mistakes become part of the training process rather than a risk to a real relationship.</p>
+<h3 id="3-progress-over-time">3. Progress over time</h3>
+<p>The value of the simulator should not stop after the first few sessions.</p>
+<p>As more personas and scenarios are added, repeated simulations can provide a history of how a salesperson performs across different client types and situations.</p>
+<p>With persistent user accounts, the system could track recurring strengths, weaknesses, and improvement over time rather than treating every conversation as an isolated event.</p>
+<p>The architecture intentionally keeps personas and scenarios relatively independent, allowing the training set to grow without rebuilding the core system.</p>
+<hr />
+<h2 id="evaluation-approach">Evaluation Approach</h2>
+<p>The simulator uses two complementary sources of feedback.</p>
+<h3 id="customer-state">Customer state</h3>
+<p>The simulated client currently has four internal state dimensions:</p>
+<ul>
+<li><strong>Trust</strong></li>
+<li><strong>Interest</strong></li>
+<li><strong>Clarity</strong></li>
+<li><strong>Readiness</strong></li>
+</ul>
+<p>These values affect how the client behaves during the conversation and can change in response to the salesperson's messages.</p>
+<p>Their main purpose is not to produce a single final score. Instead, they provide a trace of how individual messages influenced the simulated customer's attitude.</p>
+<p>This makes it possible to identify moments where a particular response increased trust, created confusion, improved interest, or pushed the client away.</p>
+<p>The state model therefore acts as a behavioral signal rather than an objective measure of sales quality.</p>
+<h3 id="ai-generated-report">AI-generated report</h3>
+<p>At the end of the conversation, a separate evaluator analyzes the complete dialogue.</p>
+<p>It considers:</p>
+<ul>
+<li>the client persona;</li>
+<li>the initial and final customer state;</li>
+<li>state changes caused by individual messages;</li>
+<li>the full conversation transcript;</li>
+<li>relevant factual information about EXANTE.</li>
+</ul>
+<p>The evaluator looks for concrete strengths, weaknesses, missed opportunities, poor explanations, objection handling, and relevant EXANTE capabilities that could have been discussed.</p>
+<p>The report is intentionally concise. Its purpose is to give the salesperson a small number of observations that can be acted on in the next session, rather than generate a long generic sales analysis.</p>
+<h3 id="why-combine-both">Why combine both</h3>
+<p>Neither mechanism is intended to be treated as absolute ground truth.</p>
+<p>The numerical customer state shows whether the salesperson's approach worked for the specific simulated personality.</p>
+<p>The evaluator provides a broader qualitative view and can identify issues that cannot be represented well by a few state variables, such as an inaccurate product claim or a missed opportunity to discuss a relevant EXANTE capability.</p>
+<p>Together they provide more useful feedback than either mechanism alone.</p>
+<hr />
+<h2 id="repeatability-and-long-term-value">Repeatability and Long-Term Value</h2>
+<p>An important property of an LLM-based simulation is that sessions are neither completely deterministic nor completely different.</p>
+<p>The same persona retains its main goals, concerns, and behavioral characteristics, while the exact dialogue may develop differently each time.</p>
+<p>This creates a useful form of repeatability.</p>
+<p>A salesperson can replay the same scenario and try:</p>
+<ul>
+<li>a different opening;</li>
+<li>different discovery questions;</li>
+<li>another way of handling an objection;</li>
+<li>a shorter or more detailed explanation;</li>
+<li>a different moment for proposing the next step.</li>
+</ul>
+<p>The goal is not to find one phrase that maximizes a score. The value comes from experimenting with different approaches against a reasonably consistent client profile.</p>
+<p>There is also a lightweight gamification effect: repeated sessions make improvement visible and encourage the salesperson to try again.</p>
+<p>After ten sessions, the interesting question should no longer be simply <em>"Did this conversation go well?"</em></p>
+<p>It should become:</p>
+<blockquote>
+<p><em>"What am I consistently good at, where do I still struggle, and am I improving?"</em></p>
+</blockquote>
+<p>This is where persistent history and cross-session analysis become more valuable than the result of any single simulation.</p>
+<p>The simulator cannot reproduce a real person perfectly. However, sufficiently realistic personas — especially ones based on recurring patterns observed in real client conversations — can still provide useful practice for common sales situations.</p>
+<hr />
+<h2 id="current-scope">Current Scope</h2>
+<p>The current implementation is deliberately a small proof of concept.</p>
+<p>It contains:</p>
+<ul>
+<li>one playable client scenario;</li>
+<li>a stateful AI persona;</li>
+<li>a complete dialogue flow;</li>
+<li>per-message customer state changes;</li>
+<li>a final AI-generated evaluation;</li>
+<li>a test harness for validating agent behavior.</li>
+</ul>
+<p>The goal of the prototype is to demonstrate the complete loop:</p>
+<p><strong>scenario → conversation → reaction → resolution → feedback</strong></p>
+<p>It is intentionally not a complete training platform.</p>
+<hr />
+<h2 id="possible-evolution">Possible Evolution</h2>
+<p>If the concept proves useful, several capabilities could grow around the core simulation loop.</p>
+<h3 id="user-accounts-and-history">User accounts and history</h3>
+<p>Authentication and persistent profiles would allow conversations, reports, and performance history to be stored for each salesperson.</p>
+<p>This would make longitudinal analysis possible.</p>
+<h3 id="progress-tracking">Progress tracking</h3>
+<p>Instead of evaluating sessions independently, the system could identify recurring patterns across conversations and highlight improvement or regression over time.</p>
+<p>For example, it could detect that objection handling is improving while discovery remains consistently weak.</p>
+<h3 id="larger-persona-and-scenario-library">Larger persona and scenario library</h3>
+<p>Additional personas could represent different client profiles, levels of financial knowledge, objections, risk attitudes, and communication styles.</p>
+<p>Scenarios could focus on specific EXANTE products, onboarding situations, difficult objections, or particular stages of a sales conversation.</p>
+<h3 id="exante-knowledge-retrieval">EXANTE knowledge retrieval</h3>
+<p>The current prototype provides the evaluator with a small curated set of EXANTE product facts.</p>
+<p>A production version could use a maintained knowledge base and RAG pipeline backed by official EXANTE sources.</p>
+<p>This would allow the evaluator to verify product claims against a broader and more current information set and identify relevant EXANTE capabilities that were missed during the conversation.</p>
+<h3 id="improved-interaction">Improved interaction</h3>
+<p>The current UI is intentionally minimal.</p>
+<p>A production version could add response streaming, improved conversation presentation, session history, report navigation, and a clearer view of progress over time.</p>
+<p>These additions are useful, but they remain secondary to the core product loop: realistic practice followed by useful feedback.</p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="js/bootstrap.bundle.min.js"></script>
+        <script>
+            var base_url = ".",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="js/base.js"></script>
+        <script src="search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
+
+<!--
+MkDocs version : 1.6.1
+Build Date UTC : 2026-08-24 03:59:59.133760+00:00
+-->
