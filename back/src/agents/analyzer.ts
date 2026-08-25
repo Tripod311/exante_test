@@ -96,7 +96,7 @@ Important:
 </data>
 
 CUSTOMER PERSONA:
-<data type="persona">
+<data type="role">
 %ROLE%
 </data>
 
