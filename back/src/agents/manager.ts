@@ -186,7 +186,10 @@ export default class AgentManager {
 
 		if (chat === undefined) throw new Error(`Chat ${id} not found`);
 
-		return chat.getRemainingTime();
+		return {
+			remaining: chat.getRemainingTime(),
+			finished: chat.finished
+		}
 	}
 
 	static async processMessage (id: string, message: string): Promise<{ response: string; finished: boolean; }> {

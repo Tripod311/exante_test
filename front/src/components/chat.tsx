@@ -139,7 +139,7 @@ export default function Chat() {
 					finished: boolean;
 				};
 
-				setRemainingTime(data.remainingTime);
+				setRemainingTime(data.remaining);
 
 				if (data.finished) {
 					setFinished(true);
