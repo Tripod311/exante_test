@@ -80,29 +80,81 @@ export default class AgentManager {
 		return id;
 	}
 
-	private static onAgentFinished (chatId: string, data: ReportData) {
-		console.log(`Processing chat ${chatId} results`);
-		const pr = AgentManager.storeReport(chatId, data);
+	private static onAgentFinished(
+		chatId: string,
+		data: ReportData
+	): void {
+		if (AgentManager.reports.has(chatId)) {
+			console.log(
+				`Report for chat ${chatId} already exists, skipping generation`
+			);
+			return;
+		}
 
-		AgentManager.pending_reports[chatId] = pr;
+		if (AgentManager.pending_reports[chatId]) {
+			console.log(
+				`Report for chat ${chatId} is already generating`
+			);
+			return;
+		}
+
+		console.log(`Starting report generation for chat ${chatId}`);
+
+		const promise = AgentManager.storeReport(chatId, data);
+
+		AgentManager.pending_reports[chatId] = promise;
+
+		void promise.then(
+			() => {
+				console.log(
+					`Report processing for chat ${chatId} completed`
+				);
+
+				if (AgentManager.pending_reports[chatId] === promise) {
+					delete AgentManager.pending_reports[chatId];
+				}
+			},
+			(error: unknown) => {
+				console.warn(
+					`Report processing for chat ${chatId} failed: ` +
+					AgentManager.formatError(error)
+				);
+
+				if (AgentManager.pending_reports[chatId] === promise) {
+					delete AgentManager.pending_reports[chatId];
+				}
+			}
+		);
 	}
 
-	private static async storeReport (chatId: string, data: ReportData) {
-		try {
-			const analyzer = new Analyzer(AgentManager.report_provider as Provider, data);
+	private static async storeReport(
+		chatId: string,
+		data: ReportData
+	): Promise<void> {
+		const analyzer = new Analyzer(
+			AgentManager.report_provider as Provider,
+			data
+		);
 
-			await analyzer.generateReport();
-			console.log(`Report for chat ${chatId} successfully generated`);
-			await fs.promises.writeFile(`${AgentManager.reports_dir}/${chatId}.json`, JSON.stringify(data));
-			console.log(`Report for chat ${chatId} saved`);
-			
-			AgentManager.reports.add(chatId);
-			delete AgentManager.chats[chatId];
-		} catch (err: any) {
-			console.warn(`Report for chat ${chatId} failed: ${err.toString()}`);
-		} finally {
-			delete AgentManager.pending_reports[chatId];
-		}
+		await analyzer.generateReport();
+
+		console.log(
+			`Report for chat ${chatId} successfully generated`
+		);
+
+		const reportPath =
+			`${AgentManager.reports_dir}/${chatId}.json`;
+
+		await fs.promises.writeFile(
+			reportPath,
+			JSON.stringify(data),
+			"utf-8"
+		);
+
+		console.log(`Report for chat ${chatId} saved`);
+
+		AgentManager.reports.add(chatId);
+		delete AgentManager.chats[chatId];
 	}
 
 	static startDialog (id: string) {
@@ -129,6 +181,14 @@ export default class AgentManager {
 		return chat.state;
 	}
 
+	static getRemainingTime (id: string) {
+		const chat = AgentManager.chats[id];
+
+		if (chat === undefined) throw new Error(`Chat ${id} not found`);
+
+		return chat.getRemainingTime();
+	}
+
 	static async processMessage (id: string, message: string): Promise<{ response: string; finished: boolean; }> {
 		const chat = AgentManager.chats[id];
 
@@ -139,30 +199,72 @@ export default class AgentManager {
 		return chat.processMessage(message);
 	}
 
-	static async getReport (id: string): Promise<ReportData> {
-		if (!UUIDRegex.test(id)) throw new Error(`Invalid chat id: ${id}`);
-
-		let exists = false;
-
-		if (AgentManager.pending_reports[id]) {
-			// report is generating
-
-			exists = true;
-			await AgentManager.pending_reports[id];
-		} else if (AgentManager.chats[id] && AgentManager.chats[id].finished) {
-			// chat is finished, but report generation failed
-
-			exists = true;
-			AgentManager.chats[id].finalize();
-			await AgentManager.pending_reports[id];
-		} else if (AgentManager.reports.has(id)) {
-			exists = true;
+	static async getReport(id: string): Promise<ReportData> {
+		if (!UUIDRegex.test(id)) {
+			throw new Error(`Invalid chat id: ${id}`);
 		}
 
-		if (!exists) throw new Error(`Report ${id} not found`);
+		if (AgentManager.reports.has(id)) {
+			console.log(`Reading existing report for chat ${id}`);
 
-		const data = await fs.promises.readFile(`${AgentManager.reports_dir}/${id}.json`, "utf-8");
-		return JSON.parse(data) as ReportData;
+			return AgentManager.readReport(id);
+		}
+
+		const pendingReport = AgentManager.pending_reports[id];
+
+		if (pendingReport) {
+			console.log(
+				`Report for chat ${id} is still generating, waiting`
+			);
+
+			try {
+				await pendingReport;
+
+				console.log(
+					`Pending report for chat ${id} successfully resolved`
+				);
+			} catch (error: unknown) {
+				console.warn(
+					`Pending report for chat ${id} rejected: ` +
+						AgentManager.formatError(error)
+				);
+
+				throw error;
+			}
+
+			if (!AgentManager.reports.has(id)) {
+				throw new Error(
+					`Report generation for chat ${id} completed, ` +
+					`but the report was not registered`
+				);
+			}
+
+			return AgentManager.readReport(id);
+		}
+
+		throw new Error(`Report ${id} not found`);
+	}
+
+	private static async readReport(
+		chatId: string
+	): Promise<ReportData> {
+		const reportPath =
+			`${AgentManager.reports_dir}/${chatId}.json`;
+
+		const content = await fs.promises.readFile(
+			reportPath,
+			"utf-8"
+		);
+
+		return JSON.parse(content) as ReportData;
+	}
+
+	private static formatError(error: unknown): string {
+		if (error instanceof Error) {
+			return error.stack ?? error.message;
+		}
+
+		return String(error);
 	}
 
 	static async setup (report_provider: Provider | undefined, reports_dir: string, agents_dir: string) {

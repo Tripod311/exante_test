@@ -31,7 +31,6 @@ type ReportArea =
 
 interface ReportEvidence {
 	messageIndex: number;
-	quote: string;
 	explanation: string;
 }
 
@@ -213,10 +212,6 @@ function AssessmentArea({
 								>
 									Message #{evidence.messageIndex + 1}
 								</button>
-
-								<blockquote className="mt-2 border-l-2 border-gray-300 pl-3 text-sm italic text-gray-700">
-									“{evidence.quote}”
-								</blockquote>
 
 								<p className="mt-2 text-sm leading-5 text-gray-600">
 									{evidence.explanation}

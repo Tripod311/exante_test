@@ -91,7 +91,7 @@ function validateEvidence(
 ): ReportEvidence {
 	const evidence = validateObject(
 		value,
-		["messageIndex", "quote", "explanation"],
+		["messageIndex", "explanation"],
 		path
 	);
 
@@ -108,12 +108,6 @@ function validateEvidence(
 		);
 	}
 
-	const quote = validateString(
-		evidence.quote,
-		`${path}.quote`,
-		240
-	);
-
 	const explanation = validateString(
 		evidence.explanation,
 		`${path}.explanation`,
@@ -122,15 +116,14 @@ function validateEvidence(
 
 	const message = conversation[messageIndex];
 
-	if (!message || !message.content.includes(quote)) {
+	if (!message) {
 		throw new Error(
-			`${path}.quote does not occur in conversation[${messageIndex}].content`
+			`${path} does not occur in conversation[${messageIndex}].content`
 		);
 	}
 
 	return {
 		messageIndex,
-		quote,
 		explanation
 	};
 }

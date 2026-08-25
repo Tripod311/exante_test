@@ -125,7 +125,6 @@ declare global {
 
 	export interface ReportEvidence {
 		messageIndex: number;
-		quote: string;
 		explanation: string;
 	}
 

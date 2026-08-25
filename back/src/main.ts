@@ -32,6 +32,7 @@ class API {
 		this.instance.post("/api/chat/:id/start", this.startDialog.bind(this));
 		this.instance.post("/api/chat/:id/finish", this.finishDialog.bind(this));
 		this.instance.get("/api/chat/:id/state", this.loadState.bind(this));
+		this.instance.get("/api/chat/:id/remaining", this.getRemainingTime.bind(this));
 		this.instance.post("/api/chat/:id/message", this.processMessage.bind(this));
 		this.instance.get("/api/chat/:id/report", this.getReport.bind(this));
 
@@ -151,6 +152,20 @@ class API {
 			res.json({
 				error: false,
 				data: AgentManager.loadState(req.params.id as string)
+			});
+		} catch (err: any) {
+			res.json({
+				error: true,
+				details: err.toString()
+			});
+		}
+	}
+
+	getRemainingTime (req: Request, res: Response) {
+		try {
+			res.json({
+				error: false,
+				data: AgentManager.getRemainingTime(req.params.id as string)
 			});
 		} catch (err: any) {
 			res.json({

@@ -63,6 +63,7 @@ export default class Agent {
 	public started: boolean = false;
 	public finished: boolean = false;
 	private timeoutID?: ReturnType<typeof setTimeout>;
+	private deadlineAt?: number;
 	private messagePromise?: Promise<string>;
 
 	constructor (
@@ -85,11 +86,33 @@ export default class Agent {
 		this.finishFunc = finishFunc;
 	}
 
-	startDialog () {
-		if (!this.started) {
-			this.started = true;
-			this.timeoutID = setTimeout(this.finishDialog.bind(this), this.conf.timeout * 60 * 1000);
+	startDialog() {
+		if (this.started || this.finished) {
+			return;
 		}
+
+		this.started = true;
+		this.deadlineAt =
+			Date.now() + this.conf.timeout * 60 * 1000;
+
+		this.timeoutID = setTimeout(() => {
+			void this.finishDialog();
+		}, this.conf.timeout * 60 * 1000);
+	}
+
+	getRemainingTime(): number {
+		if (!this.started) {
+			return this.conf.timeout * 60;
+		}
+
+		if (this.finished || !this.deadlineAt) {
+			return 0;
+		}
+
+		return Math.max(
+			0,
+			Math.ceil((this.deadlineAt - Date.now()) / 1000)
+		);
 	}
 
 	async finishDialog () {
@@ -153,12 +176,13 @@ export default class Agent {
 		});
 	}
 
-	async processMessage (message: string): Promise<{ response: string; finished: boolean; }> {
+	async processMessage (message: string): Promise<{ response: string; remainingTime: number; finished: boolean; }> {
 		if (!this.started) throw new Error(`ProcessMessage called on dialog that was not started yet`);
 
 		if (this.finished) {
 			return {
 				response: "",
+				remainingTime: 0,
 				finished: true
 			}
 		}
@@ -171,6 +195,7 @@ export default class Agent {
 
 		return {
 			response: result,
+			remainingTime: this.getRemainingTime(),
 			finished: this.finished
 		}
 	}
@@ -211,7 +236,8 @@ export default class Agent {
 			type: this.agent_type,
 			started: this.started,
 			finished: this.finished,
-			history: this.history
+			history: this.history,
+			remainingTime: this.getRemainingTime()
 		}
 	}
 

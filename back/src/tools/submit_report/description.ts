@@ -10,13 +10,6 @@ const evidenceSchema = {
 				"Zero-based index of the conversation message used as evidence."
 		},
 
-		quote: {
-			type: "string",
-			maxLength: 240,
-			description:
-				"An exact short quote from the referenced conversation message."
-		},
-
 		explanation: {
 			type: "string",
 			maxLength: 240,
@@ -27,7 +20,6 @@ const evidenceSchema = {
 
 	required: [
 		"messageIndex",
-		"quote",
 		"explanation"
 	]
 };

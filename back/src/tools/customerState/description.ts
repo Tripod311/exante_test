@@ -26,6 +26,15 @@ State dimensions:
 - clarity: how well the customer currently understands the offer, product, or proposed next steps.
 - readiness: how willing the customer is to take a concrete next step, such as receiving materials, scheduling another call, or considering opening an account.
 
+Dimension guidance:
+
+- Increase interest when the message makes the offered service meaningfully more relevant or appealing to the character; decrease it when the service becomes meaningfully less relevant or appealing.
+- Increase trust when the message improves the salesperson's credibility or addresses a concern transparently; decrease it when credibility is weakened.
+- Increase clarity when the message meaningfully improves the customer's understanding; decrease it when it creates or increases confusion.
+- Increase readiness when the message gives the customer a stronger reason to consider a concrete next step; decrease it when action becomes less appropriate or desirable.
+
+A greeting, politeness, acknowledgement, routine question, or simple continuation of the conversation does not by itself justify a state change.
+
 The application keeps all state values between 0 and 10. You only provide the delta.
 `.trim();
 

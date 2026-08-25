@@ -3,9 +3,13 @@ import { useParams, useNavigate } from "react-router-dom";
 
 import type { APIResponse } from "../api/config.js"
 import loadChatState from "../api/loadChatState.js"
+import getRemainingTime from "../api/getRemainingTime.js"
 import startDialog from "../api/startDialog.js"
 import finishDialog from "../api/finishDialog.js"
 import sendMessage from "../api/sendMessage.js"
+
+import { AgentMessage, UserMessage, TypingMessage, SystemMessage, ErrorMessage } from "./chatMessages.jsx"
+import Timer from "./chatTimer.jsx"
 
 interface Message {
 	role: "assistant" | "user" | "system";
@@ -18,82 +22,13 @@ interface ChatStateResponse {
 	started: boolean;
 	finished: boolean;
 	type: string;
+	remainingTime: number;
 }
 
 interface SendMessageResponse {
 	finished: boolean;
+	remainingTime: number;
 	response: string;
-}
-
-function AgentMessage({ content }: { content: string }) {
-	return (
-		<div className="flex justify-start">
-			<div className="max-w-[75%] rounded-2xl rounded-bl-md bg-gray-100 px-4 py-3 text-sm leading-6 text-gray-800">
-				{content}
-			</div>
-		</div>
-	);
-}
-
-function UserMessage({ content }: { content: string }) {
-	return (
-		<div className="flex justify-end">
-			<div className="max-w-[75%] rounded-2xl rounded-br-md bg-gray-900 px-4 py-3 text-sm leading-6 text-white">
-				{content}
-			</div>
-		</div>
-	);
-}
-
-function TypingMessage() {
-	return (
-		<div className="flex justify-start" role="status" aria-label="Agent is typing">
-			<div className="flex items-center gap-1 rounded-2xl rounded-bl-md bg-gray-100 px-4 py-3">
-				{[0, 1, 2].map((index) => (
-					<span
-						key={index}
-						className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
-						style={{
-							animationDelay: `${index * 150}ms`,
-							animationDuration: "800ms"
-						}}
-					/>
-				))}
-
-				<span className="ml-1 text-sm text-gray-500">
-					Typing…
-				</span>
-			</div>
-		</div>
-	);
-}
-
-function SystemMessage({ content }: { content: string }) {
-	return (
-		<div
-			className="flex justify-center"
-		>
-			<div
-				className={`max-w-[75%] rounded-xl border px-4 py-2 text-center text-sm leading-5 border-gray-200 bg-gray-50 text-gray-500`}
-			>
-				{content}
-			</div>
-		</div>
-	);
-}
-
-function ErrorMessage({ content }: { content: string }) {
-	return (
-		<div
-			className="flex justify-center"
-		>
-			<div
-				className={`max-w-[75%] rounded-xl border px-4 py-2 text-center text-sm leading-5 border-red-200 bg-red-50 text-black`}
-			>
-				{content}
-			</div>
-		</div>
-	);
 }
 
 interface ChatPlaceholderProps {
@@ -153,6 +88,7 @@ export default function Chat() {
 	const [started, setStarted] = useState(false);
 	const [finished, setFinished] = useState(false);
 	const [agentName, setAgentName] = useState("");
+	const [remainingTime, setRemainingTime] = useState(0);
 
 	useEffect(() => {
 		window.showSpinner();
@@ -174,29 +110,63 @@ export default function Chat() {
 					setStarted(data.started);
 					setFinished(data.finished);
 					setAgentName(data.type);
+					setRemainingTime(data.remainingTime);
 				}
 			}
 		);
 	}, []);
 
 	useEffect(() => {
-		window.addEventListener("keydown", handleEnter);
+		if (!started || finished) {
+			return;
+		}
+
+		let cancelled = false;
+		let timeoutID: number | undefined;
+
+		async function synchronizeTimer() {
+			try {
+				const response = await getRemainingTime(
+					chatId as string
+				);
+
+				if (cancelled || response.error) {
+					return;
+				}
+
+				const data = response.data as {
+					remainingTime: number;
+					finished: boolean;
+				};
+
+				setRemainingTime(data.remainingTime);
+
+				if (data.finished) {
+					setFinished(true);
+				}
+			} finally {
+				if (!cancelled) {
+					timeoutID = window.setTimeout(
+						synchronizeTimer,
+						10_000
+					);
+				}
+			}
+		}
+
+		timeoutID = window.setTimeout(
+			synchronizeTimer,
+			10_000
+		);
 
 		return () => {
-			window.removeEventListener("keydown", handleEnter);
+			cancelled = true;
+
+			if (timeoutID !== undefined) {
+				window.clearTimeout(timeoutID);
+			}
 		};
-	}, []);
-
-	function handleEnter(event: KeyboardEvent) {
-		if (pending) return;
-		if (event.key !== "Enter") return;
-
-		if (event.shiftKey) return;
-
-		event.preventDefault();
-
-		send();
-	}
+	}, [chatId, started, finished]);
 
 	function send() {
 		const content = input.trim();
@@ -220,6 +190,8 @@ export default function Chat() {
 			},
 
 		])
+
+		setInput("");
 
 		sendMessage(chatId as string, content).then(
 			(response: APIResponse) => {
@@ -253,11 +225,11 @@ export default function Chat() {
 									content: `This conversation is over. Click "Finish dialog" button to proceed to report`
 								}
 							]);
-							setInput("");	
 						} else {
 							setFinished(true);
 						}
 					} else {
+						setRemainingTime(data.remainingTime);
 						setMessages(prev => [
 							...(prev.slice(0, prev.length - 1)),
 							{
@@ -265,7 +237,6 @@ export default function Chat() {
 								content: data.response
 							}
 						]);
-						setInput("");
 					}
 				}
 			}
@@ -341,6 +312,24 @@ export default function Chat() {
 					<h1 className="text-lg font-semibold text-gray-900">
 						Chat with {agentName}
 					</h1>
+
+					<Timer
+						remainingTime={remainingTime}
+						started={started}
+						onDeadline={() => {
+							setMessages(previous => [
+								...previous,
+								{
+									role: "system",
+									systemType: "notification",
+									content: "Time is over. New messages cannot be sent."
+								}
+							]);
+
+							setFinished(true);
+						}}
+					/>
+
 					<button
 						onClick={finish}
 						className="
@@ -398,6 +387,12 @@ export default function Chat() {
 						<textarea
 							value={input}
 							onChange={event => setInput(event.target.value)}
+							onKeyDown={event => {
+								if (event.key === "Enter" && !event.shiftKey) {
+									event.preventDefault();
+									send();
+								}
+							}}
 							placeholder="Type your message..."
 							rows={2}
 							className="
@@ -409,7 +404,7 @@ export default function Chat() {
 							"
 						/>
 
-						<div
+						<button
 							onClick={send}
 							className="
 								self-end rounded-xl bg-gray-900
@@ -418,7 +413,7 @@ export default function Chat() {
 							"
 						>
 							Send
-						</div>
+						</button>
 					</div>
 				</div>
 			</div>
