@@ -134,6 +134,8 @@ export default class AgentManager {
 		chatId: string,
 		data: ReportData
 	): Promise<void> {
+		if (data.conversation.length === 0) throw new Error("Can't generate report for empty dialog");
+
 		const analyzer = new Analyzer(
 			AgentManager.report_provider as Provider,
 			data

@@ -95,6 +95,10 @@ export default class OpenAIProvider extends Provider {
 		while (true) {
 			iterations++;
 
+			if (iterations > max_iterations) {
+				throw new Error("Max iterations exceeded");
+			}
+
 			const response = await this.send(
 				this.configuration.model,
 				messages,
@@ -104,10 +108,6 @@ export default class OpenAIProvider extends Provider {
 				req.topP,
 				this.configuration.maxTokens
 			);
-
-			if (iterations > max_iterations) {
-				throw new Error("Max iterations exceeded");
-			}
 
 			if (response.choices.length === 0) {
 				throw new Error(`OpenAI returned no content`);

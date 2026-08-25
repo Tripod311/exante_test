@@ -1,5 +1,5 @@
 const description = `
-Update the customer's internal state based on the salesperson's latest message, interpreted in the context of the conversation history.
+Update the customer's internal state based on the salesperson's latest message, interpreted in the context of the conversation history. Call this tool only once per request.
 
 Use the conversation history to understand:
 - what the customer previously asked or expressed concern about;

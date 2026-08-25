@@ -10,10 +10,8 @@ Status meanings:
 - pass: the evaluated behavior satisfies the criteria.
 - warning: there is a minor, ambiguous, or borderline issue, but no clear major violation.
 - fail: there is a clear and meaningful violation of the criteria.
-- error: use only when the evaluation itself cannot be completed because the provided data is invalid, missing, contradictory, or otherwise impossible to evaluate.
 
-Provide a concise details message for warning, fail, or error.
-For pass, details may be omitted unless a short explanation is useful.
+Always provide a concise details message.
 
 Do not include any result outside this tool call.
 `.trim(),

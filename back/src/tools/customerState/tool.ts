@@ -47,9 +47,16 @@ export default class CustomerStateTool {
 			readiness: normalize(args.readiness)
 		};
 
+		const newState = {
+			interest: Math.min(10, Math.max(0, this.currentState.interest + this.currentImpact.interest)),
+			trust: Math.min(10, Math.max(0, this.currentState.trust + this.currentImpact.trust)),
+			clarity: Math.min(10, Math.max(0, this.currentState.clarity + this.currentImpact.clarity)),
+			readiness: Math.min(10, Math.max(0, this.currentState.readiness + this.currentImpact.readiness))
+		}
+
 		return {
-			"impactToApply": this.currentImpact,
-			"currentState": this.currentState
+			"appliedImpact": this.currentImpact,
+			"resultingState": newState
 		}
 	}
 
@@ -86,5 +93,10 @@ export default class CustomerStateTool {
 
 	get promptModifier (): string {
 		return modifier.replace("%STATE%", JSON.stringify(this.currentState));
+	}
+
+	forceState (val: CustomerState) {
+		this.currentState = val;
+		this.currentImpact = undefined;
 	}
 }
