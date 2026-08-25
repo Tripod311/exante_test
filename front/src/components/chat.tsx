@@ -10,7 +10,7 @@ import sendMessage from "../api/sendMessage.js"
 interface Message {
 	role: "assistant" | "user" | "system";
 	content: string;
-	systemType?: "placeholder" | "error";
+	systemType?: "placeholder" | "error" | "notification";
 }
 
 interface ChatStateResponse {
@@ -75,6 +75,20 @@ function SystemMessage({ content }: { content: string }) {
 		>
 			<div
 				className={`max-w-[75%] rounded-xl border px-4 py-2 text-center text-sm leading-5 border-gray-200 bg-gray-50 text-gray-500`}
+			>
+				{content}
+			</div>
+		</div>
+	);
+}
+
+function ErrorMessage({ content }: { content: string }) {
+	return (
+		<div
+			className="flex justify-center"
+		>
+			<div
+				className={`max-w-[75%] rounded-xl border px-4 py-2 text-center text-sm leading-5 border-red-200 bg-red-50 text-black`}
 			>
 				{content}
 			</div>
@@ -231,7 +245,12 @@ export default function Chat() {
 								...(prev.slice(0, prev.length - 1)),					
 								{
 									role: "assistant",
-									content: `%${data.response}\n\n\n-- THIS CONVERSATION IS FINISHED, CLICK FINISH DIALOG BUTTON TO PROCEED TO THE REPORT WHEN YOU ARE READY --`
+									content: `data.response`
+								},
+								{
+									role: "system",
+									systemType: "notification",
+									content: `This conversation is over. Click "Finish dialog" button to proceed to report`
 								}
 							]);
 							setInput("");	
@@ -359,6 +378,11 @@ export default function Chat() {
 								case "system":
 									if (message.systemType === "placeholder") {
 										return <TypingMessage key={index} />
+									} else if (message.systemType === "error") {
+										return <ErrorMessage
+											key={index}
+											content={message.content}
+										/>
 									} else {
 										return <SystemMessage
 											key={index}
