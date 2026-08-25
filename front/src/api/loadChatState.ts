@@ -5,7 +5,7 @@ export default async function loadChatState (id: string): Promise<APIResponse>  
 	try {
 		const response = await fetch(`${BaseURL}/chat/${id}/state`);
 
-		if (!response.ok) throw new Error(`Request failed: ${response.statusCode} : ${response.status}`);
+		if (!response.ok) throw new Error(`Request failed: ${response.status} : ${response.statusText}`);
 
 		const data = await response.json();
 

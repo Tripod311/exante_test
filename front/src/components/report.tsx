@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Markdown from "react-markdown";
 import StateRow from "./stateRow.jsx"
 
+import type { APIResponse } from "../api/config.js"
 import getReport from "../api/getReport.js"
 
 interface CustomerState {
@@ -15,6 +16,7 @@ interface CustomerState {
 interface ReportMessageData {
 	role: "user" | "assistant";
 	content: string;
+	impact?: CustomerState;
 }
 
 interface ReportData {
@@ -27,6 +29,45 @@ interface ReportData {
 	result: string;
 }
 
+const impactLabels: Record<keyof CustomerState, string> = {
+	interest: "Interest",
+	trust: "Trust",
+	clarity: "Clarity",
+	readiness: "Readiness"
+};
+
+function MessageImpact({ impact }: { impact: CustomerState | undefined }) {
+	if (!impact) return null;
+
+	const changes = (
+		Object.entries(impact) as [keyof CustomerState, number][]
+	).filter(([, value]) => value !== 0);
+
+	if (changes.length === 0) return null;
+
+	return (
+		<div className="mt-2 flex flex-wrap gap-1.5">
+			{changes.map(([key, value]) => {
+				const positive = value > 0;
+
+				return (
+					<span
+						key={key}
+						className={
+							positive
+								? "rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700"
+								: "rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700"
+						}
+					>
+						{impactLabels[key]} {positive ? "+" : ""}
+						{value}
+					</span>
+				);
+			})}
+		</div>
+	);
+}
+
 export default function Report() {
 	const { chatId } = useParams();
 	const navigate = useNavigate();
@@ -35,7 +76,7 @@ export default function Report() {
 	useEffect(() => {
 		window.showSpinner();
 
-		getReport(chatId).then(
+		getReport(chatId as string).then(
 			(response: APIResponse) => {
 				window.closeModals();
 
@@ -45,7 +86,7 @@ export default function Report() {
 						navigate("/");
 					});
 				} else {
-					setReport(response.data);
+					setReport(response.data as ReportData);
 				}
 			}
 		);
@@ -94,7 +135,7 @@ export default function Report() {
 
 						<div className="flex flex-col divide-y divide-gray-100">
 							{
-								report === undefined ? null : Object.keys(report?.stateDelta).map((key: string) => {
+								report === undefined ? null : (Object.keys(report?.stateDelta) as (keyof CustomerState)[]).map((key) => {
 									return <StateRow
 										key={key}
 										label={key}
@@ -127,27 +168,32 @@ export default function Report() {
 						</div>
 
 						<div className="flex flex-col gap-4 p-5">
-							{report?.conversation.map((message, index) =>
-								message.role === "assistant" ? (
+							{report?.conversation.map((message, index) => {
+								const isAssistant = message.role === "assistant";
+
+								return (
 									<div
 										key={index}
-										className="flex justify-start"
+										className={`flex ${
+											isAssistant ? "justify-start" : "justify-end"
+										}`}
 									>
-										<div className="max-w-[80%] rounded-xl bg-gray-100 px-4 py-3 text-sm leading-6 text-gray-800">
-											{message.content}
+										<div className="max-w-[80%]">
+											<div
+												className={`rounded-xl px-4 py-3 text-sm leading-6 ${
+													isAssistant
+														? "bg-gray-100 text-gray-800"
+														: "bg-gray-900 text-white"
+												}`}
+											>
+												{message.content}
+											</div>
+
+											<MessageImpact impact={message.impact} />
 										</div>
 									</div>
-								) : (
-									<div
-										key={index}
-										className="flex justify-end"
-									>
-										<div className="max-w-[80%] rounded-xl bg-gray-900 px-4 py-3 text-sm leading-6 text-white">
-											{message.content}
-										</div>
-									</div>
-								)
-							)}
+								);
+							})}
 						</div>
 					</section>
 

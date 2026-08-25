@@ -4,7 +4,7 @@ import { Route, Routes, useNavigate } from "react-router-dom"
 
 import spawnChat from "./api/spawnChat.js"
 import getAgents from "./api/getAgents.js"
-import type APIResponse from "./api/config.js"
+import type { APIResponse } from "./api/config.js"
 
 import Spinner from "./components/spinner.jsx"
 import Overlay from "./overlay/overlay.jsx"
@@ -25,9 +25,9 @@ export default function Application () {
 				window.closeModals();
 
 				if (response.error) {
-					window.showNotification(response.details);
+					window.showNotification("Error", response.details);
 				} else {
-					setAgents(response.data);
+					setAgents(response.data as string[]);
 				}
 			}
 		);

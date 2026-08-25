@@ -158,7 +158,7 @@ The salesperson will send the first message.
 				},
 				{
 					role: "system",
-					content: `Current customer state:\n<data type="customerState">${this.customerState.result}</data>`
+					content: `Current customer state:\n<data type="customerState">${JSON.stringify(this.customerState.result)}</data>`
 				},
 				{
 					role: "system",

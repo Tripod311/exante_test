@@ -4,11 +4,12 @@
 
 # Installation
 
-## 1. Clone the repository
+## 1. Clone the repository and run build
 
 ```bash
 git clone https://github.com/Tripod311/exante_test.git
 cd exante_test
+./build.sh
 ```
 
 ## 2. Configure the backend

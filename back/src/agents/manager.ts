@@ -82,18 +82,25 @@ export default class AgentManager {
 
 	private static onAgentFinished (chatId: string, data: ReportData) {
 		console.log(`Processing chat ${chatId} results`);
-		const pr = Analyzer.generateReport(AgentManager.report_provider as Provider, data)
-			.then(() => {
-				return fs.promises.writeFile(`${AgentManager.reports_dir}/${chatId}.json`, JSON.stringify(data));
-			})
-			.then(() => {
-				console.log(`Report for chat ${chatId} successfully generated`);
-				delete AgentManager.pending_reports[chatId];
-				AgentManager.reports.add(chatId);
-				delete AgentManager.chats[chatId];
-			});
+		const pr = AgentManager.storeReport(chatId, data);
 
 		AgentManager.pending_reports[chatId] = pr;
+	}
+
+	private static async storeReport (chatId: string, data: ReportData) {
+		try {
+			await Analyzer.generateReport(AgentManager.report_provider as Provider, data);
+			console.log(`Report for chat ${chatId} successfully generated`);
+			await fs.promises.writeFile(`${AgentManager.reports_dir}/${chatId}.json`, JSON.stringify(data));
+			console.log(`Report for chat ${chatId} saved`);
+			
+			AgentManager.reports.add(chatId);
+			delete AgentManager.chats[chatId];
+		} catch (err: any) {
+			console.warn(`Report for chat ${chatId} failed: ${err.toString()}`);
+		} finally {
+			delete AgentManager.pending_reports[chatId];
+		}
 	}
 
 	static startDialog (id: string) {

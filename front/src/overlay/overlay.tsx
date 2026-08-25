@@ -12,7 +12,7 @@ export default function Overlay () {
 		setDialog(spinner);
 	}
 
-	window.showNotification = (heading: string, message: string, onClose?: () => void) => {
+	window.showNotification = (heading?: string, message?: string, onClose?: () => void) => {
 		const dialog = <NotificationDialog heading={heading} message={message} onClose={onClose} />;
 		setDialog(dialog);
 	}
@@ -21,7 +21,7 @@ export default function Overlay () {
 		setDialog(null);
 	}
 
-	return <div className="top-0 left-0 w-full h-full fixed flex flex-col justify-center items-center" style={{ "pointer-events": dialog === null ? "none" : "all" }}>
+	return <div className="top-0 left-0 w-full h-full fixed flex flex-col justify-center items-center" style={{ pointerEvents: dialog === null ? "none" : "all" }}>
 		{ dialog !== null ? <div className="w-full h-full bg-black/50 absolute"></div> : null }
 		{ dialog }
 	</div>

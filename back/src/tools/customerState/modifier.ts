@@ -16,15 +16,20 @@ Before writing any response, evaluate the latest message in the context of:
 For every parameter, explicitly decide internally whether the latest message should increase it, decrease it, or leave it unchanged.
 
 For example:
-- If message contains thorough information that directly addresses character needs, goals, preferences, objections, questions, you MUST decide which customerState parameters it must affect and call update_customer_state accordingly.
-- If message contains confusing, misleading, irrelevant information, you MUST decide which customerState parameters it affects and call update_customer_state accordingly.
-- If salesman becomes pushy, agressive, rude, if he ignores customer requests or needs, you MUST decide which customerState parameters it affects and call update_customer_state accordingly.
-- If message is a simple greeting, farewell, small talk or contains already mentioned information, infomation that character already should know according to role, or character should not care about, you MUST NOT use update_customer_state.
+- If message contains thorough information that directly addresses character needs, goals, preferences, objections, questions, you MUST decide which customerState parameters it must affect and increase them via update_customer_state tool accordingly.
+- If message contains confusing, misleading, irrelevant information, you MUST decide which customerState parameters it affects and decrease them via update_customer_state tool accordingly.
+- If salesman's behavior is pushy, agressive, rude, or if he ignores or negliges customer requests or needs, you MUST decide which customerState parameters it affects and decrease them via call update_customer_state tool accordingly.
+- If salesman's answers show his incompetence or he seems ignorant or agressive or rude or offensive, you MUST decide which customerState parameters it affects and decrease them via update_customer_state tool accordingly.
+- If salesman answers question honestly, correctly, thoroughly and politely, you MUST decide which customerState parameters it must affect and increase them via update_customer_state tool accordingly.
+- If message is a simple greeting, farewell, small talk or contains already mentioned information, infomation that character already should know according to role, or character should not care about, you MUST NOT use update_customer_state tool.
 
 For every change consider character personality, conversation history, customerState and character knowledge.
 For example, if character already trades, he should not increase clarity after basic explanation about how trading works. But if he receives detailed information about more specific topics clarity may increase.
 If character is cautious, he should not increase readiness, unless his concerns are resolved, but he may increase trust if salesman consequently addresses his concerns,
 If character receives full and detailed information that resolves his concerns and fits to his goals, readiness MUST be increased.
+
+Increase readiness every time, when salesman messages adress major concerns and provide relevant and full information that resolve those concerns
+Decrease readiness every time, when salesman messages approve concerns and expose potential inconveniences for character.
 
 UPDATE MAGNITUDE
 

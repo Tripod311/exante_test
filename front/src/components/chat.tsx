@@ -1,15 +1,28 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
-import type APIResponse from "../api/config.js"
+import type { APIResponse } from "../api/config.js"
 import loadChatState from "../api/loadChatState.js"
 import startDialog from "../api/startDialog.js"
 import finishDialog from "../api/finishDialog.js"
 import sendMessage from "../api/sendMessage.js"
 
 interface Message {
-	role: "agent" | "user";
+	role: "assistant" | "user" | "system";
 	content: string;
+	systemType?: "placeholder" | "error";
+}
+
+interface ChatStateResponse {
+	history: Message[];
+	started: boolean;
+	finished: boolean;
+	type: string;
+}
+
+interface SendMessageResponse {
+	finished: boolean;
+	response: string;
 }
 
 function AgentMessage({ content }: { content: string }) {
@@ -26,6 +39,43 @@ function UserMessage({ content }: { content: string }) {
 	return (
 		<div className="flex justify-end">
 			<div className="max-w-[75%] rounded-2xl rounded-br-md bg-gray-900 px-4 py-3 text-sm leading-6 text-white">
+				{content}
+			</div>
+		</div>
+	);
+}
+
+function TypingMessage() {
+	return (
+		<div className="flex justify-start" role="status" aria-label="Agent is typing">
+			<div className="flex items-center gap-1 rounded-2xl rounded-bl-md bg-gray-100 px-4 py-3">
+				{[0, 1, 2].map((index) => (
+					<span
+						key={index}
+						className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+						style={{
+							animationDelay: `${index * 150}ms`,
+							animationDuration: "800ms"
+						}}
+					/>
+				))}
+
+				<span className="ml-1 text-sm text-gray-500">
+					Typing…
+				</span>
+			</div>
+		</div>
+	);
+}
+
+function SystemMessage({ content }: { content: string }) {
+	return (
+		<div
+			className="flex justify-center"
+		>
+			<div
+				className={`max-w-[75%] rounded-xl border px-4 py-2 text-center text-sm leading-5 border-gray-200 bg-gray-50 text-gray-500`}
+			>
 				{content}
 			</div>
 		</div>
@@ -83,6 +133,7 @@ export default function Chat() {
 	const navigate = useNavigate();
 	const chatRef = useRef<HTMLDivElement>(null);
 
+	const [pending, setPending] = useState<boolean>(true);
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [input, setInput] = useState("");
 	const [started, setStarted] = useState(false);
@@ -92,7 +143,7 @@ export default function Chat() {
 	useEffect(() => {
 		window.showSpinner();
 
-		loadChatState(chatId).then(
+		loadChatState(chatId as string).then(
 			(response: APIResponse) => {
 				window.closeModals();
 
@@ -102,14 +153,36 @@ export default function Chat() {
 						navigate("/");
 					});
 				} else {
-					setMessages(response.data.history as Message[]);
-					setStarted(response.data.started);
-					setFinished(response.data.finished);
-					setAgentName(response.data.type);
+					const data = response.data as ChatStateResponse; 
+
+					setPending(false);
+					setMessages(data.history as Message[]);
+					setStarted(data.started);
+					setFinished(data.finished);
+					setAgentName(data.type);
 				}
 			}
 		);
 	}, []);
+
+	useEffect(() => {
+		window.addEventListener("keydown", handleEnter);
+
+		return () => {
+			window.removeEventListener("keydown", handleEnter);
+		};
+	}, []);
+
+	function handleEnter(event: KeyboardEvent) {
+		if (pending) return;
+		if (event.key !== "Enter") return;
+
+		if (event.shiftKey) return;
+
+		event.preventDefault();
+
+		send();
+	}
 
 	function send() {
 		const content = input.trim();
@@ -118,26 +191,46 @@ export default function Chat() {
 			return;
 		}
 
-		window.showSpinner();
+		setPending(true);
 
-		sendMessage(chatId, content).then(
+		setMessages(prev => [
+			...prev,
+			{
+				role: "system",
+				systemType: "placeholder",
+				content: ""
+			}
+		])
+
+		sendMessage(chatId as string, content).then(
 			(response: APIResponse) => {
 				window.closeModals();
 
+				setPending(false);
+
 				if (response.error) {
-					window.showNotification("Error", response.details, window.closeModals);
+					setMessages(prev => [
+						...(prev.slice(0, prev.length - 1)),
+						{
+							role: "system",
+							systemType: "error",
+							content: response.details as string
+						}
+					]);
 				} else {
-					if (response.data.finished) {
-						if (response.data.response) {
+					const data = response.data as SendMessageResponse;
+
+					if (data.finished) {
+						if (data.response) {
 							setMessages(prev => [
-								...prev,
+								...(prev.slice(0, prev.length - 1)),
 								{
 									role: "user",
 									content: content
 								},
 								{
 									role: "assistant",
-									content: `%${response.data.response}\n\n\n-- THIS CONVERSATION IS FINISHED, CLICK FINISH DIALOG BUTTON TO PROCEED TO THE REPORT WHEN YOU ARE READY --`
+									content: `%${data.response}\n\n\n-- THIS CONVERSATION IS FINISHED, CLICK FINISH DIALOG BUTTON TO PROCEED TO THE REPORT WHEN YOU ARE READY --`
 								}
 							]);
 							setInput("");	
@@ -146,14 +239,14 @@ export default function Chat() {
 						}
 					} else {
 						setMessages(prev => [
-							...prev,
+							...(prev.slice(0, prev.length - 1)),
 							{
 								role: "user",
 								content: content
 							},
 							{
 								role: "assistant",
-								content: response.data.response
+								content: data.response
 							}
 						]);
 						setInput("");
@@ -166,7 +259,7 @@ export default function Chat() {
 	function start () {
 		window.showSpinner();
 
-		startDialog(chatId).then(
+		startDialog(chatId as string).then(
 			(response: APIResponse) => {
 				window.closeModals();
 
@@ -182,7 +275,7 @@ export default function Chat() {
 	function finish () {
 		window.showSpinner();
 
-		finishDialog(chatId).then(
+		finishDialog(chatId as string).then(
 			(response: APIResponse) => {
 				window.closeModals();
 
@@ -249,19 +342,33 @@ export default function Chat() {
 
 				<div className="min-h-0 flex-1 overflow-y-auto" ref={chatRef}>
 					<div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-6 py-6">
-						{messages.map((message, index) =>
-							message.role === "assistant" ? (
-								<AgentMessage
-									key={message.index}
-									content={message.content}
-								/>
-							) : (
-								<UserMessage
-									key={message.index}
-									content={message.content}
-								/>
-							)
-						)}
+						{
+							messages.map((message, index) => {
+								switch (message.role) {
+								case 'assistant':
+									return <AgentMessage
+										key={index}
+										content={message.content}
+									/>
+								case "user":
+									return <UserMessage
+										key={index}
+										content={message.content}
+									/>
+								case "system":
+									if (message.systemType === "placeholder") {
+										return <TypingMessage key={index} />
+									} else {
+										return <SystemMessage
+											key={index}
+											content={message.content}
+										/>
+									}
+								default:
+									return null;
+								}
+							})
+						}
 					</div>
 				</div>
 

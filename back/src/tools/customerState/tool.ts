@@ -21,11 +21,25 @@ export default class CustomerStateTool {
 		};
 	}
 
-	async update (args: Record<string, unknown>) {
-		console.log(`Customer state update called`);
-		this.currentImpact = args as unknown as CustomerState;
+	async update(args: Record<string, unknown>) {
+		console.log("Customer state update called");
 
-		return "State updated success";
+		const normalize = (value: unknown): number => {
+			if (typeof value !== "number" || !Number.isInteger(value)) {
+				return 0;
+			}
+
+			return Math.max(-2, Math.min(2, value));
+		};
+
+		this.currentImpact = {
+			interest: normalize(args.interest),
+			trust: normalize(args.trust),
+			clarity: normalize(args.clarity),
+			readiness: normalize(args.readiness)
+		};
+
+		return "State updated successfully";
 	}
 
 	commit () {

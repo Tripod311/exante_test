@@ -1,6 +1,7 @@
 interface NotificationDialogProps {
-	message: string;
-	onClose?: () => void;
+	heading: string | undefined;
+	message: string | undefined;
+	onClose: (() => void) | undefined;
 }
 
 export default function NotificationDialog(props: NotificationDialogProps) {
