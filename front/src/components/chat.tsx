@@ -196,10 +196,15 @@ export default function Chat() {
 		setMessages(prev => [
 			...prev,
 			{
+				role: "user",
+				content: content
+			},
+			{
 				role: "system",
 				systemType: "placeholder",
 				content: ""
-			}
+			},
+
 		])
 
 		sendMessage(chatId as string, content).then(
@@ -210,7 +215,7 @@ export default function Chat() {
 
 				if (response.error) {
 					setMessages(prev => [
-						...(prev.slice(0, prev.length - 1)),
+						...(prev.slice(0, prev.length - 2)),
 						{
 							role: "system",
 							systemType: "error",
@@ -223,11 +228,7 @@ export default function Chat() {
 					if (data.finished) {
 						if (data.response) {
 							setMessages(prev => [
-								...(prev.slice(0, prev.length - 1)),
-								{
-									role: "user",
-									content: content
-								},
+								...(prev.slice(0, prev.length - 1)),					
 								{
 									role: "assistant",
 									content: `%${data.response}\n\n\n-- THIS CONVERSATION IS FINISHED, CLICK FINISH DIALOG BUTTON TO PROCEED TO THE REPORT WHEN YOU ARE READY --`
