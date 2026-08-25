@@ -126,6 +126,10 @@ export default class OpenAIProvider extends Provider {
 							tool_call_id: call.id,
 							content: JSON.stringify(result)
 						});
+
+						if (req.finishOnToolCall && req.finishOnToolCall.includes(call.function.name)) {
+							return "";
+						}
 					} catch (err: any) {
 						console.warn(`Tool call error: ${err}`);
 						messages.push({

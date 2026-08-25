@@ -5,6 +5,16 @@ export interface CustomerState {
 	readiness: number;
 }
 
+const modifier = `
+You will also receive the character's current internal state as customerState.
+Each parameter is an integer from 0 to 10. Use it as behavioral context for the character's tone, openness, confidence, skepticism, and readiness. Treat values as tendencies, not explicit instructions.
+Never mention customerState, parameter names or values, state changes, or the update_customer_state tool. The persona and its goals always take priority. State changes must influence behavior naturally and must not abruptly alter the character's personality.
+
+<data type="customerState">
+%STATE%
+</data>	
+`.trim();
+
 export default class CustomerStateTool {
 	private currentState: CustomerState;
 	private currentImpact?: CustomerState;
@@ -22,8 +32,6 @@ export default class CustomerStateTool {
 	}
 
 	async update(args: Record<string, unknown>) {
-		console.log("Customer state update called");
-
 		const normalize = (value: unknown): number => {
 			if (typeof value !== "number" || !Number.isInteger(value)) {
 				return 0;
@@ -39,7 +47,10 @@ export default class CustomerStateTool {
 			readiness: normalize(args.readiness)
 		};
 
-		return "State updated successfully";
+		return {
+			"impactToApply": this.currentImpact,
+			"currentState": this.currentState
+		}
 	}
 
 	commit () {
@@ -71,5 +82,9 @@ export default class CustomerStateTool {
 
 	get result (): CustomerState {
 		return Object.assign({}, this.currentState);
+	}
+
+	get promptModifier (): string {
+		return modifier.replace("%STATE%", JSON.stringify(this.currentState));
 	}
 }

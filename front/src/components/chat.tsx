@@ -261,10 +261,6 @@ export default function Chat() {
 						setMessages(prev => [
 							...(prev.slice(0, prev.length - 1)),
 							{
-								role: "user",
-								content: content
-							},
-							{
 								role: "assistant",
 								content: data.response
 							}
@@ -413,7 +409,7 @@ export default function Chat() {
 							"
 						/>
 
-						<button
+						<div
 							onClick={send}
 							className="
 								self-end rounded-xl bg-gray-900
@@ -422,7 +418,7 @@ export default function Chat() {
 							"
 						>
 							Send
-						</button>
+						</div>
 					</div>
 				</div>
 			</div>

@@ -6,12 +6,317 @@ import type Provider from "./providers/provider.js"
 import Agent from "./agents/agent.js"
 import Judge from "./agents/judge.js"
 
+type EvalStatus = EvalResult["status"];
+
 class EvalRunner {
 	static applicationConfiguration?: ApplicationConfiguration;
 	static baseEvalsDir: string = path.resolve("./evals");
 	static suites: EvalSuite[] = [];
-	static agent?: Agent;
-	static judge?: Judge;
+	static agent: Agent | null = null;
+	static judge: Judge | null = null;
+
+	static async runEvals(): Promise<AgentEvalResult> {
+		if (!EvalRunner.agent) {
+			throw new Error("EvalRunner agent is not initialized");
+		}
+
+		if (!EvalRunner.judge) {
+			throw new Error("EvalRunner judge is not initialized");
+		}
+
+		const startedAt = Date.now();
+		const results: EvalSuiteResult[] = [];
+
+		console.log(`Starting eval run: ${EvalRunner.suites.length} suite(s)`);
+
+		for (let index = 0; index < EvalRunner.suites.length; index++) {
+			const suite = EvalRunner.suites[index];
+
+			console.log(
+				`\n[Suite ${index + 1}/${EvalRunner.suites.length}] ${suite!.name}`
+			);
+
+			const result = await EvalRunner.runSuite(
+				suite as EvalSuite,
+				EvalRunner.agent,
+				EvalRunner.judge
+			);
+
+			results.push(result);
+		}
+
+		const overall = results.reduce(
+			(total, suite) => {
+				total.tests += suite.result.total;
+				total.passed += suite.result.passed;
+				total.failed += suite.result.failed;
+				total.warnings += suite.result.warnings;
+				total.errors += suite.result.errors;
+
+				return total;
+			},
+			{
+				tests: 0,
+				passed: 0,
+				failed: 0,
+				warnings: 0,
+				errors: 0
+			}
+		);
+
+		console.log("\nEval run completed");
+		console.log(`Suites:   ${results.length}`);
+		console.log(`Tests:    ${overall.tests}`);
+		console.log(`Passed:   ${overall.passed}`);
+		console.log(`Failed:   ${overall.failed}`);
+		console.log(`Warnings: ${overall.warnings}`);
+		console.log(`Errors:   ${overall.errors}`);
+		console.log(`Duration: ${EvalRunner.formatDuration(Date.now() - startedAt)}`);
+
+		return {
+			agent_type: EvalRunner.agent.type,
+			agent_configuration: EvalRunner.agent.configuration,
+			prompt_hash: EvalRunner.agent.prompt_hash,
+			results: results
+		}
+	}
+
+	static async runSuite(
+		suite: EvalSuite,
+		agent: Agent,
+		judge: Judge
+	): Promise<EvalSuiteResult> {
+		const startedAt = Date.now();
+		const tests = Object.entries(suite.tests);
+
+		const suiteResult: EvalSuiteResult = {
+			name: suite.name,
+			description: suite.description,
+			result: {
+				total: tests.length,
+				passed: 0,
+				failed: 0,
+				warnings: 0,
+				errors: 0,
+				tests: {}
+			}
+		};
+
+		console.log(`Description: ${suite.description}`);
+		console.log(`Tests: ${tests.length}`);
+
+		for (let index = 0; index < tests.length; index++) {
+			const [testName, test] = tests[index]!;
+
+			console.log(
+				`\n  [Test ${index + 1}/${tests.length}] ${suite.name} -> ${testName}`
+			);
+
+			const result = await EvalRunner.runTest(
+				test,
+				agent,
+				judge
+			);
+
+			suiteResult.result.tests[testName] = result;
+			EvalRunner.incrementStatusCounter(suiteResult, result.status);
+
+			const agreement =
+				"agreement" in result
+					? `, agreement: ${(result.agreement * 100).toFixed(0)}%`
+					: "";
+
+			console.log(
+				`  Result: ${result.status.toUpperCase()}${agreement}`
+			);
+		}
+
+		console.log(`\nSuite "${suite.name}" completed`);
+		console.log(
+			`  ${suiteResult.result.passed} passed, ` +
+			`${suiteResult.result.failed} failed, ` +
+			`${suiteResult.result.warnings} warnings, ` +
+			`${suiteResult.result.errors} errors`
+		);
+		console.log(
+			`  Duration: ${EvalRunner.formatDuration(Date.now() - startedAt)}`
+		);
+
+		return suiteResult;
+	}
+
+	static async runTest(
+		test: EvalTest,
+		agent: Agent,
+		judge: Judge
+	): Promise<EvalResult | MultiEvalResult> {
+		const runner = typeof test === "function" ? test : test.run;
+		const trials = typeof test === "function" ? 1 : test.trials;
+
+		if (!Number.isInteger(trials) || trials < 1) {
+			return {
+				status: "error",
+				details: `Invalid trials value: ${trials}. Expected a positive integer.`
+			};
+		}
+
+		if (trials === 1) {
+			console.log("  Running single trial");
+
+			return EvalRunner.runSingleTest(runner, agent, judge);
+		}
+
+		console.log(`  Running ${trials} trials`);
+
+		const results: EvalResult[] = [];
+
+		for (let trial = 1; trial <= trials; trial++) {
+			console.log(`    Trial ${trial}/${trials}`);
+
+			const result = await EvalRunner.runSingleTest(
+				runner,
+				agent,
+				judge
+			);
+
+			results.push(result);
+
+			console.log(
+				`    Trial ${trial}/${trials}: ${result.status.toUpperCase()}` +
+				(result.details ? ` — ${result.details}` : "")
+			);
+		}
+
+		const status = EvalRunner.getMajorityStatus(results);
+		const matchingResults = results.filter(
+			result => result.status === status
+		).length;
+
+		return {
+			status,
+			agreement: matchingResults / results.length,
+			results
+		};
+	}
+
+	static async runSingleTest(
+		runner: EvalTestRunner,
+		agent: Agent,
+		judge: Judge
+	): Promise<EvalResult> {
+		const startedAt = Date.now();
+
+		try {
+			agent.reset();
+
+			const result = await runner(agent, judge);
+
+			if (!EvalRunner.isEvalResult(result)) {
+				return {
+					status: "error",
+					details: "Test returned an invalid EvalResult"
+				};
+			}
+
+			console.log(
+				`    Completed in ${EvalRunner.formatDuration(Date.now() - startedAt)}`
+			);
+
+			return result;
+		} catch (error) {
+			const message = EvalRunner.formatError(error);
+
+			console.error(
+				`    Execution error after ` +
+				`${EvalRunner.formatDuration(Date.now() - startedAt)}: ${message}`
+			);
+
+			return {
+				status: "error",
+				details: `Execution failed: ${message}`
+			};
+		}
+	}
+
+	private static getMajorityStatus(results: EvalResult[]): EvalStatus {
+		const counts: Record<EvalStatus, number> = {
+			pass: 0,
+			warning: 0,
+			fail: 0,
+			error: 0
+		};
+
+		for (const result of results) {
+			counts[result.status]++;
+		}
+
+		const priority: EvalStatus[] = [
+			"error",
+			"fail",
+			"warning",
+			"pass"
+		];
+
+		return priority.reduce((selected, status) => {
+			return counts[status] > counts[selected]
+				? status
+				: selected;
+		});
+	}
+
+	private static incrementStatusCounter(
+		suite: EvalSuiteResult,
+		status: EvalStatus
+	): void {
+		switch (status) {
+			case "pass":
+				suite.result.passed++;
+				break;
+
+			case "fail":
+				suite.result.failed++;
+				break;
+
+			case "warning":
+				suite.result.warnings++;
+				break;
+
+			case "error":
+				suite.result.errors++;
+				break;
+		}
+	}
+
+	private static isEvalResult(value: unknown): value is EvalResult {
+		if (!value || typeof value !== "object") {
+			return false;
+		}
+
+		const status = (value as Partial<EvalResult>).status;
+
+		return (
+			status === "pass" ||
+			status === "fail" ||
+			status === "warning" ||
+			status === "error"
+		);
+	}
+
+	private static formatError(error: unknown): string {
+		if (error instanceof Error) {
+			return error.stack ?? error.message;
+		}
+
+		return String(error);
+	}
+
+	private static formatDuration(milliseconds: number): string {
+		if (milliseconds < 1_000) {
+			return `${milliseconds} ms`;
+		}
+
+		return `${(milliseconds / 1_000).toFixed(2)} s`;
+	}
 
 	static async loadDefaultEvals() {
 		const entries = await fs.promises.readdir(
@@ -99,131 +404,12 @@ class EvalRunner {
 		if (EvalRunner.applicationConfiguration!.providers[providerType] === undefined) throw new Error(`Provider ${providerType} is not defined`);
 		const provider = await createProvider(EvalRunner.applicationConfiguration!.providers[providerType]);
 
-		EvalRunner.judge = new Judge(provider);
-	}
-
-	static async runEvals(): Promise<EvalSuiteResult[]> {
-		const final: EvalSuiteResult[] = [];
-
-		const overall = {
-			total: 0,
-			passed: 0,
-			failed: 0,
-			warnings: 0,
-			errors: 0
-		};
-
-		for (const suite of EvalRunner.suites) {
-			const total = Object.keys(suite.tests).length;
-
-			const suiteResult: EvalSuiteResult = {
-				name: suite.name,
-				description: suite.description,
-
-				result: {
-					total,
-					passed: 0,
-					failed: 0,
-					warnings: 0,
-					errors: 0,
-					tests: {}
-				}
-			};
-
-			console.log(`\nRunning suite ${suite.name}`);
-
-			for (const testName in suite.tests) {
-				console.log(`Running test ${suite.name}->${testName}`);
-
-				EvalRunner.agent!.reset();
-
-				const func = suite.tests[testName] as (agent: Agent, judge: Judge) => Promise<EvalResult>;
-
-				try {
-					const funcResult = await func(
-						EvalRunner.agent as Agent,
-						EvalRunner.judge as Judge
-					);
-
-					if (!funcResult || !funcResult.status) {
-						throw new Error(
-							`Function ${suite.name}->${testName} returned no status`
-						);
-					}
-
-					switch (funcResult.status) {
-						case "pass":
-							suiteResult.result.passed++;
-							break;
-
-						case "fail":
-							suiteResult.result.failed++;
-							break;
-
-						case "warning":
-							suiteResult.result.warnings++;
-							break;
-
-						case "error":
-							suiteResult.result.errors++;
-							break;
-
-						default:
-							throw new Error(
-								`Function ${suite.name}->${testName} returned invalid status ${(funcResult as any).status}`
-							);
-					}
-
-					suiteResult.result.tests[testName] = funcResult;
-
-					console.log(
-						`Test result: ${funcResult.status.toUpperCase()}`
-						+ (funcResult.details
-							? ` — ${funcResult.details}`
-							: "")
-					);
-				} catch (err: any) {
-					const result: EvalResult = {
-						status: "error",
-						details: `Execution failed: ${err.toString()}`
-					};
-
-					suiteResult.result.errors++;
-					suiteResult.result.tests[testName] = result;
-
-					console.log(
-						`Test result: ERROR — ${result.details}`
-					);
-				}
-			}
-
-			console.log(`\nSuite ${suite.name} finished, status:`);
-			console.log(`passed:   ${suiteResult.result.passed}/${total}`);
-			console.log(`failed:   ${suiteResult.result.failed}/${total}`);
-			console.log(`warnings: ${suiteResult.result.warnings}/${total}`);
-			console.log(`errors:   ${suiteResult.result.errors}/${total}`);
-
-			overall.total += total;
-			overall.passed += suiteResult.result.passed;
-			overall.failed += suiteResult.result.failed;
-			overall.warnings += suiteResult.result.warnings;
-			overall.errors += suiteResult.result.errors;
-
-			final.push(suiteResult);
-		}
-
-		console.log("\nOverall result:");
-		console.log(`passed:   ${overall.passed}/${overall.total}`);
-		console.log(`failed:   ${overall.failed}/${overall.total}`);
-		console.log(`warnings: ${overall.warnings}/${overall.total}`);
-		console.log(`errors:   ${overall.errors}/${overall.total}`);
-
-		return final;
+		EvalRunner.judge = new Judge(provider, EvalRunner.agent!.role);
 	}
 
 	static async saveResult (
 		agentType: string,
-		result: EvalSuiteResult[]
+		result: AgentEvalResult
 	) {
 		const dirPath = path.resolve(
 			EvalRunner.applicationConfiguration!.agents_dir,
@@ -259,6 +445,7 @@ async function runTests () {
 	EvalRunner.applicationConfiguration = JSON.parse(appConfigRaw) as ApplicationConfiguration;
 
 	const agentType = process.argv[2];
+
 	const judgeProvider = EvalRunner.applicationConfiguration.judge_provider;
 
 	await EvalRunner.loadDefaultEvals();

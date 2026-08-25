@@ -89,7 +89,9 @@ export default class AgentManager {
 
 	private static async storeReport (chatId: string, data: ReportData) {
 		try {
-			await Analyzer.generateReport(AgentManager.report_provider as Provider, data);
+			const analyzer = new Analyzer(AgentManager.report_provider as Provider, data);
+
+			await analyzer.generateReport();
 			console.log(`Report for chat ${chatId} successfully generated`);
 			await fs.promises.writeFile(`${AgentManager.reports_dir}/${chatId}.json`, JSON.stringify(data));
 			console.log(`Report for chat ${chatId} saved`);

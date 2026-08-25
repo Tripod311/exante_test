@@ -26,8 +26,7 @@ Do not include any result outside this tool call.
 				enum: [
 					"pass",
 					"fail",
-					"warning",
-					"error"
+					"warning"
 				],
 				description: "Final evaluation status."
 			},

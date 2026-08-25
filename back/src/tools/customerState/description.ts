@@ -1,7 +1,11 @@
 const description = `
-Update the simulated customer's internal state based only on the salesperson's latest message and the resulting change in the customer's attitude.
+Update the customer's internal state based on the salesperson's latest message, interpreted in the context of the conversation history.
 
-Use this tool only once per customer response when the salesperson's message meaningfully affects the customer's state.
+Use the conversation history to understand:
+- what the customer previously asked or expressed concern about;
+- what information the salesperson has already provided;
+- whether the latest message completes, clarifies, supports, contradicts,
+  or resolves something discussed earlier.
 
 Each field is a delta, not an absolute value.
 
@@ -13,7 +17,8 @@ Allowed values:
 -  2 = strong positive change
 
 Do not change a value merely because the conversation continued.
-Only modify dimensions directly affected by the salesperson's latest message.
+Apply only changes that became justified as a result of the latest message,
+while using the full conversation history to determine its meaning and impact.
 
 State dimensions:
 - interest: how interested the customer is in continuing the discussion or considering the offered service.

@@ -52,6 +52,7 @@ declare global {
 		messages: Message[];
 		tools?: ProviderToolDescription[];
 		requiredTool?: string;
+		finishOnToolCall?: string[];
 		temperature?: number;
 		topP?: number;
 	}
@@ -61,39 +62,30 @@ declare global {
 		details?: string;
 		data?: unknown;
 	}
-
-	type ReportMessageData = {
-		role: string;
-		content: string;
-		impact?: CustomerState;
-	}
-
-	interface ReportData {
-		agent_type: string;
-		role: string;
-		initialState: CustomerState;
-		finalState: CustomerState;
-		stateDelta: CustomerState;
-		conversation: ReportMessageData[];
-		result?: string;
-	}
 	
 	interface EvalResult {
 		status: "pass" | "fail" | "warning" | "error";
 		details?: string;
 	}
 
+	interface MultiEvalResult {
+		status: "pass" | "fail" | "warning" | "error";
+		agreement: number;
+		results: EvalResult[];
+	}
+
+	type EvalTestRunner = (
+		agent: Agent,
+		judge: Judge
+	) => Promise<EvalResult>;
+
+	type EvalTest = EvalTestRunner | { run: EvalTestRunner, trials: number; };
+
 	interface EvalSuite {
 		name: string;
 		description: string;
 
-		tests: Record<
-			string,
-			(
-				agent: Agent,
-				judge: Judge
-			) => Promise<EvalResult>
-		>;
+		tests: Record<string, EvalTest>;
 	}
 
 	interface EvalSuiteResult {
@@ -105,8 +97,62 @@ declare global {
 			warnings: number;
 			failed: number;
 			errors: number;
-			tests: Record<string, EvalResult>
+			tests: Record<string, EvalResult | MultiEvalResult>
 		}
+	}
+
+	interface AgentEvalResult {
+		agent_type: string;
+		agent_configuration: AgentConfiguration;
+		prompt_hash: string;
+		results: EvalSuiteResult[];
+	}
+
+	export interface ReportMessageData {
+		role: "user" | "assistant";
+		content: string;
+		impact?: CustomerState;
+	}
+
+	export type ReportArea =
+		| "customer_understanding"
+		| "communication_quality"
+		| "trust_building"
+		| "product_knowledge"
+		| "objection_handling"
+		| "missed_opportunities"
+		| "next_steps";
+
+	export interface ReportEvidence {
+		messageIndex: number;
+		quote: string;
+		explanation: string;
+	}
+
+	export interface ReportAreaResult {
+		score: 1 | 2 | 3 | 4 | 5;
+		summary: string;
+		evidence: ReportEvidence[];
+		recommendation: string;
+	}
+
+	export interface ReportResult {
+		schemaVersion: 1;
+		overallSummary: string;
+		areas: Record<ReportArea, ReportAreaResult>;
+	}
+
+	export interface ReportData {
+		role: string;
+		initialState: CustomerState;
+		finalState: CustomerState;
+		stateDelta: CustomerState;
+		conversation: ReportMessageData[];
+		result?: ReportResult;
+
+		agent_type: string;
+		agent_configuration: AgentConfiguration;
+		prompt_hash: string;
 	}
 }
 

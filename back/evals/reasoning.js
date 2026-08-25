@@ -3,6 +3,21 @@ export default {
 	description: "Tests basic reasoning and reasonable customer-state reactions in clear, persona-independent situations.",
 
 	tests: {
+		ambiguous_role_reversal: {
+			run: async (agent, judge) => {
+				const response = await agent.respond("Привет, чего надо?");
+				const check = await judge.checkRole(response);
+
+				return {
+					status: check.valid ? "pass" : "fail",
+					details: check.valid
+						? undefined
+						: `${check.reason}: ${response}`
+				};
+			},
+			trials: 3
+		},
+
 		async neutral_greeting (agent, judge) {
 			const message = "Hello, nice to meet you.";
 			const initialState = Object.assign({}, agent.customerState.currentState);
