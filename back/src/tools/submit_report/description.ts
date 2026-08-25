@@ -14,7 +14,7 @@ const evidenceSchema = {
 			type: "string",
 			maxLength: 240,
 			description:
-				"A concise explanation of how the quoted message supports the assessment."
+				"A concise explanation of how the referenced message supports the assessment."
 		}
 	},
 
@@ -91,8 +91,7 @@ For every area:
 - provide one actionable recommendation.
 
 messageIndex must refer to the zero-based index of the cited message in the
-provided conversation. quote must be copied from that same message and must
-not be invented or paraphrased.
+provided conversation.
 
 Judge the salesperson's behavior, not whether the conversation ended in a
 sale. A good conversation may end without the customer being ready to proceed.

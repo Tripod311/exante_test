@@ -55,7 +55,7 @@ class API {
 		try {
 			await AgentManager.setup(this.providers[this.config.report_provider], this.config.reports_dir, this.config.agents_dir);
 
-			const server = this.instance.listen(this.config.port, () => {
+			this.server = this.instance.listen(this.config.port, () => {
 				console.log(`Listening on ${this.config.port}`);
 			});
 		} catch (err: any) {
@@ -134,9 +134,9 @@ class API {
 		}
 	}
 
-	finishDialog (req: Request, res: Response) {
+	async finishDialog (req: Request, res: Response) {
 		try {
-			AgentManager.finishDialog(req.params.id as string);
+			await AgentManager.finishDialog(req.params.id as string);
 
 			res.json({ error: false });
 		} catch (err: any) {

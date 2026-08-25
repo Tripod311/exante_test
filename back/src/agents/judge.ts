@@ -32,6 +32,7 @@ Keep details concise and specific.
 const judgeTask = `
 PERSONA INFORMATION:
 <data type="persona">
+%ROLE%
 </data>
 
 EVALUATION CRITERIA:

@@ -22,12 +22,12 @@ export default class CustomerStateTool {
 	public index: number = 0;
 	public evolution: { impact: CustomerState; index: number; }[] = [];
 
-	constructor (initialState: Record<string, number>) {
+	constructor (initialState: CustomerState) {
 		this.currentState = {
-			interest: initialState.interest || 0,
-			trust: initialState.trust || 0,
-			clarity: initialState.clarity || 0,
-			readiness: initialState.readiness || 0
+			interest: Math.min(10, Math.max(0, initialState.interest)),
+			trust: Math.min(10, Math.max(0, initialState.trust)),
+			clarity: Math.min(10, Math.max(0, initialState.clarity)),
+			readiness: Math.min(10, Math.max(0, initialState.readiness))
 		};
 	}
 

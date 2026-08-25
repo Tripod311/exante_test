@@ -123,6 +123,9 @@ export default class AgentManager {
 				if (AgentManager.pending_reports[chatId] === promise) {
 					delete AgentManager.pending_reports[chatId];
 				}
+
+				// temporary, just remove chat. In prod should retry or dump chat info
+				delete AgentManager.chats[chatId];
 			}
 		);
 	}
@@ -165,12 +168,12 @@ export default class AgentManager {
 		chat.startDialog();
 	}
 
-	static finishDialog (id: string) {
+	static async finishDialog (id: string) {
 		const chat = AgentManager.chats[id];
 
 		if (chat === undefined) throw new Error(`Chat ${id} not found`);
 
-		chat.finishDialog();
+		await chat.finishDialog();
 	}
 
 	static loadState (id: string) {
@@ -192,7 +195,7 @@ export default class AgentManager {
 		}
 	}
 
-	static async processMessage (id: string, message: string): Promise<{ response: string; finished: boolean; }> {
+	static async processMessage (id: string, message: string): Promise<{ response: string; remaining: number; finished: boolean; }> {
 		const chat = AgentManager.chats[id];
 
 		if (chat === undefined) throw new Error(`Chat ${id} not found`);

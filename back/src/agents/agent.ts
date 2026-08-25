@@ -176,27 +176,34 @@ export default class Agent {
 		});
 	}
 
-	async processMessage (message: string): Promise<{ response: string; remainingTime: number; finished: boolean; }> {
+	async processMessage (message: string): Promise<{ response: string; remaining: number; finished: boolean; }> {
+		if (this.messagePromise !== undefined) throw new Error("Already processing message");
+
 		if (!this.started) throw new Error(`ProcessMessage called on dialog that was not started yet`);
 
 		if (this.finished) {
 			return {
 				response: "",
-				remainingTime: 0,
+				remaining: 0,
 				finished: true
 			}
 		}
 
 		this.messagePromise = this.send(message);
 
-		const result = await this.messagePromise;
+		try {
+			const result = await this.messagePromise;
 
-		this.messagePromise = undefined;
+			this.messagePromise = undefined;
 
-		return {
-			response: result,
-			remainingTime: this.getRemainingTime(),
-			finished: this.finished
+			return {
+				response: result,
+				remaining: this.getRemainingTime(),
+				finished: this.finished
+			}
+		} catch (err: any) {
+			this.messagePromise = undefined;
+			throw err;
 		}
 	}
 

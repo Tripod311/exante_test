@@ -27,7 +27,7 @@ interface ChatStateResponse {
 
 interface SendMessageResponse {
 	finished: boolean;
-	remainingTime: number;
+	remaining: number;
 	response: string;
 }
 
@@ -135,7 +135,7 @@ export default function Chat() {
 				}
 
 				const data = response.data as {
-					remainingTime: number;
+					remaining: number;
 					finished: boolean;
 				};
 
@@ -171,7 +171,7 @@ export default function Chat() {
 	function send() {
 		const content = input.trim();
 
-		if (!content) {
+		if (!content || pending) {
 			return;
 		}
 
@@ -229,7 +229,7 @@ export default function Chat() {
 							setFinished(true);
 						}
 					} else {
-						setRemainingTime(data.remainingTime);
+						setRemainingTime(data.remaining);
 						setMessages(prev => [
 							...(prev.slice(0, prev.length - 1)),
 							{
@@ -326,7 +326,7 @@ export default function Chat() {
 								}
 							]);
 
-							setFinished(true);
+							finish();
 						}}
 					/>
 

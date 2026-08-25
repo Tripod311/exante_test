@@ -57,6 +57,8 @@ interface OpenAIResponse {
 	};
 }
 
+const default_max_iterations = 4;
+
 export default class OpenAIProvider extends Provider {
 	async request(req: ProviderRequest): Promise<string> {
 		let iterations = 0;
@@ -88,6 +90,8 @@ export default class OpenAIProvider extends Provider {
 			}
 		}
 
+		const max_iterations = this.configuration.maxIterations ?? default_max_iterations;
+
 		while (true) {
 			iterations++;
 
@@ -101,7 +105,7 @@ export default class OpenAIProvider extends Provider {
 				this.configuration.maxTokens
 			);
 
-			if (this.configuration.maxIterations !== undefined && iterations === this.configuration.maxIterations) {
+			if (iterations > max_iterations) {
 				throw new Error("Max iterations exceeded");
 			}
 
@@ -115,10 +119,6 @@ export default class OpenAIProvider extends Provider {
 
 			if (msg.tool_calls && msg.tool_calls.length > 0) {
 				for (const call of msg.tool_calls) {
-					if (requiredTool !== undefined && call.function.name === requiredTool.function.name) {
-						requiredTool = undefined;
-					}
-
 					try {
 						const result = await this.callTool(req.tools as ProviderToolDescription[], call.function.name, JSON.parse(call.function.arguments));
 						messages.push({
@@ -127,6 +127,10 @@ export default class OpenAIProvider extends Provider {
 							content: JSON.stringify(result)
 						});
 
+						if (requiredTool !== undefined && call.function.name === requiredTool.function.name) {
+							requiredTool = undefined;
+						}
+						
 						if (req.finishOnToolCall && req.finishOnToolCall.includes(call.function.name)) {
 							return "";
 						}
@@ -233,6 +237,6 @@ export default class OpenAIProvider extends Provider {
 			);
 		}
 
-		throw new Error(`OpenAI API request failed after ${maxRetries} retries`);
+		throw new Error(`OpenAI API request failed after ${maxRetries + 1} retries`);
 	}
 }
