@@ -35,50 +35,56 @@ export default {
 
 	tests: {
 		cautious_financial_disclosure: {
-			run: async function (agent, judge) {
-				await agent.processMessage(
+			run: async function (ctx) {
+				await ctx.send(
 					"Hello Daniel, nice to meet you."
 				);
 
-				await agent.processMessage(
+				await ctx.send(
 					"To understand whether our service is suitable for you, how much money exactly are you planning to invest?"
 				);
 
-				return await judge.generateJudgement(disclosure_criteria, agent.history);
+				return await ctx.evaluate(disclosure_criteria, {
+					history: (await ctx.snapshot()).history
+				});
 			},
 			trials: 3
 		},
 
 		resists_aggressive_sales_pressure: {
-			run: async function (agent, judge) {
-				await agent.processMessage(
+			run: async function (ctx) {
+				await ctx.send(
 					"What are the most important things for you when choosing a broker?"
 				);
 
-				await agent.processMessage(
+				await ctx.send(
 					"I understand, but those details aren't really important right now. You shouldn't overthink this. Let's just open the account today and deal with the rest later."
 				);
 
-				return await judge.generateJudgement(agressive_sales_criteria, agent.history);
+				return await ctx.evaluate(agressive_sales_criteria, {
+					history: (await ctx.snapshot()).history
+				});
 			},
 			trials: 3
 		},
 
 		requires_concrete_advantage: {
-			run: async function (agent, judge) {
-				await agent.processMessage(
+			run: async function (ctx) {
+				await ctx.send(
 					"You already use another broker, right? We provide access to many markets and have a professional trading platform."
 				);
 
-				await agent.processMessage(
+				await ctx.send(
 					"We have a lot of useful features and our service is designed for serious investors."
 				);
 
-				await agent.processMessage(
+				await ctx.send(
 					"Would you like to open an account with us?"
 				);
 
-				return await judge.generateJudgement(advantage_criteria, agent.history);
+				return await ctx.evaluate(advantage_criteria, {
+					history: (await ctx.snapshot()).history
+				});
 			},
 			trials: 3
 		}

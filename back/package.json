@@ -13,7 +13,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/main.js",
-    "eval": "node dist/eval.js"
+    "eval": "node dist/testAgent.js"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
@@ -23,6 +23,7 @@
     "typescript": "^7.0.2"
   },
   "dependencies": {
+    "@tripod311/ripple": "file:../../liquid toolkit/ripple",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "ws": "^8.21.3"
